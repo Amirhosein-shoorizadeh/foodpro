@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeFamilyInformation;
 
 @Entity
-@Table(name = "users")
 @Inheritance(strategy = InheritanceType.JOINED)
 public abstract class User {
     @Id
