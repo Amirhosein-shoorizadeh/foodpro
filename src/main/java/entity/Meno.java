@@ -6,8 +6,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "Orders")
-public class Order {
+@Table(name = "Menos")
+public class Meno {
     @Id
     @GeneratedValue
     private int Id;

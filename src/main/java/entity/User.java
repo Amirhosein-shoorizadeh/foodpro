@@ -29,8 +29,19 @@ public abstract class User {
     @Column(name = "Email",nullable = false,unique = true)
     private String Email;
 
-    @Column(name = "PhoneNumber",nullable = false)
+    @Column(name = "Address",nullable = false)
     private String Address;
+
+    public User( String username, String password, String name, String family, String phoneNumber, String email, String address) {
+        this.Username = username;
+        this.Password = password;
+        this.Name = name;
+        this.Family = family;
+        this.PhoneNumber = phoneNumber;
+        this.Email = email;
+        this.Address = address;
+    }
+    public User() {}
 
 
     public Long getId() {

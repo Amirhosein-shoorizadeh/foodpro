@@ -1,7 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE hibernate-configuration PUBLIC
-        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
-        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
 <hibernate-configuration>
     <session-factory>
         <!-- تنظیمات اتصال به دیتابیس -->
@@ -9,13 +5,29 @@
         <property name="hibernate.connection.url">jdbc:sqlite:data.db</property>
         <property name="hibernate.connection.username"></property>
         <property name="hibernate.connection.password"></property>
+
         <!-- گویش دیتابیس -->
         <property name="hibernate.dialect">org.hibernate.community.dialect.SQLiteDialect</property>
+
         <!-- تنظیمات اضافی -->
         <property name="hibernate.hbm2ddl.auto">update</property>
         <property name="hibernate.show_sql">true</property>
         <property name="hibernate.format_sql">true</property>
+
+        <!-- 🔧 این خط رو اضافه کن -->
+        <property name="hibernate.current_session_context_class">thread</property>
+
         <!-- کلاس‌های Entity -->
         <mapping class="entity.User"/>
+        <mapping class="entity.Customer"/>
+        <mapping class="entity.Seller"/>
+        <mapping class="entity.Courier"/>
+        <mapping class="entity.Admin"/>
+        <mapping class="entity.Category"/>
+        <mapping class="entity.Meno"/>
+        <mapping class="entity.Restaurant"/>
+        <mapping class="entity.Food"/>
+        <mapping class="entity.Order"/>
+
     </session-factory>
 </hibernate-configuration>
