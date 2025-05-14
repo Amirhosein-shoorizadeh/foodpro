@@ -23,10 +23,10 @@ public class Main {
 
         SessionFactory factory = new Configuration().configure("hibernate.cfg.xml").addAnnotatedClass(User.class).buildSessionFactory();
         Session session = factory.getCurrentSession();
-         session.beginTransaction();
+        session.beginTransaction();
 
-         session.getTransaction().commit();
-         session.close();
+        session.getTransaction().commit();
+        session.close();
 
     }
 }
