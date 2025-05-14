@@ -1,24 +1,32 @@
 package main;
-import entity.User;
+import com.sun.net.httpserver.HttpServer;
+import entity.*;
+import org.hibernate.SessionFactory;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
-import util.HibernateUtil;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
+
+//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
+// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) {
-        Session session = HibernateUtil.getSessionFactory().openSession();
-        Transaction tx = session.beginTransaction();
+        try {
+            HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
 
-        // ایجاد شی و ذخیره
-        User s1 = new User("Amir Hosein");
-        session.persist(s1);
+        }catch (IOException e){
+            System.out.println("Error: " + e.getMessage());
+        }
 
-        tx.commit();
+        SessionFactory factory = new Configuration().configure("hibernate.cfg.xml").addAnnotatedClass(User.class).buildSessionFactory();
+        Session session = factory.getCurrentSession();
+        session.beginTransaction();
 
-        // خواندن شیء از دیتابیس
-        User result = session.get(User.class, s1.getId());
-        System.out.println("Read from DB: " + result.getName());
-
+        session.getTransaction().commit();
         session.close();
+
     }
 }
