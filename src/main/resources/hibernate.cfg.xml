@@ -23,11 +23,8 @@
         <mapping class="entity.Seller"/>
         <mapping class="entity.Courier"/>
         <mapping class="entity.Admin"/>
-        <mapping class="entity.Category"/>
-        <mapping class="entity.Meno"/>
         <mapping class="entity.Restaurant"/>
-        <mapping class="entity.Food"/>
-        <mapping class="entity.Order"/>
+
 
     </session-factory>
 </hibernate-configuration>
