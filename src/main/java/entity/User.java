@@ -1,10 +1,9 @@
 package entity;
 
 import jakarta.persistence.*;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeFamilyInformation;
+
 
 @Entity
-@Table(name = "users")
 @Inheritance(strategy = InheritanceType.JOINED)
 public abstract class User {
     @Id
@@ -23,10 +22,10 @@ public abstract class User {
     @Column(name = "Family",nullable = false)
     private String Family;
 
-    @Column(name = "PhoneNumber",nullable = false,unique = true)
+    @Column(name = "phoneNumber",nullable = false,unique = true)
     private String PhoneNumber;
 
-    @Column(name = "Email",nullable = false,unique = true)
+    @Column(name = "Email",unique = true)
     private String Email;
 
     @Column(name = "Address",nullable = false)

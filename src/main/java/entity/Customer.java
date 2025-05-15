@@ -1,11 +1,27 @@
 package entity;
 
-import jakarta.persistence.Entity;
+import jakarta.persistence.*;
+
+import java.util.*;
 
 @Entity
-public class Customer extends User{
-    public Customer(String username, String password, String name, String family, String phoneNumber, String email, String address){
+public class Customer extends User {
+
+    @OneToMany(mappedBy = "buyer", cascade = CascadeType.ALL)
+    private List<Order> orders = new ArrayList<>();
+
+    public Customer() {
+    }
+
+    public Customer(String username, String password, String name, String family, String phoneNumber, String email, String address) {
         super(username, password, name, family, phoneNumber, email, address);
     }
-    public Customer(){}
+
+    public List<Order> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(List<Order> orders) {
+        this.orders = orders;
+    }
 }
