@@ -37,5 +37,5 @@ public class Food {
         this.number = number;
     }
 
-
+    // Getters & Setters
 }
