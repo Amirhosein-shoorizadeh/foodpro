@@ -1,41 +1,38 @@
 package entity;
 
 import jakarta.persistence.*;
+import java.util.*;
 
-import java.util.ArrayList;
 @Entity
 public class Order {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id;
+    private Long id;
 
-    @OneToOne(mappedBy = "Customer")
-    private Customer customer;
+    @ManyToOne
+    @JoinColumn(name = "customer_id")
+    private Customer buyer;
 
-    @OneToOne(mappedBy = "Restaurant")
+    @ManyToOne
+    @JoinColumn(name = "restaurant_id")
     private Restaurant restaurant;
 
-    @OneToMany(mappedBy = "food")
-    private ArrayList<Food> Foods = new ArrayList<Food>();
+    @ManyToMany
+    @JoinTable(
+            name = "order_food",
+            joinColumns = @JoinColumn(name = "order_id"),
+            inverseJoinColumns = @JoinColumn(name = "food_id")
+    )
+    private List<Food> foods = new ArrayList<>();
 
-    public Order(Customer customer, Restaurant restaurant
-            , ArrayList<Food> Foods) {
-        this.customer = customer;
+    public Order() {}
+
+    public Order(Customer buyer, Restaurant restaurant, List<Food> foods) {
+        this.buyer = buyer;
         this.restaurant = restaurant;
-        this.Foods = Foods;
+        this.foods = foods;
     }
 
-    public Long getId() {
-        return Id;
-
-    }
-
-    public Customer getCustomer() {
-        return customer;
-    }
-
-    public Restaurant getRestaurant() {
-        return restaurant;
-    }
-
+    // Getters & setters
 }

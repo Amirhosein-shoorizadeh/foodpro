@@ -1,29 +1,24 @@
 package entity;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
+
 
 @Entity
 public class Seller extends User {
 
-    @OneToMany(mappedBy = "Seller", cascade = CascadeType.ALL)
-    private ArrayList<Restaurant> Restaurants = new ArrayList<Restaurant>();
+    @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL)
+    private List<Restaurant> restaurants = new ArrayList<>();
+
+    public Seller() {
+    }
 
     public Seller(String username, String password, String name, String family, String phoneNumber, String email, String address) {
         super(username, password, name, family, phoneNumber, email, address);
     }
 
-    public Seller() {
+    public List<Restaurant> getRestaurants() {
+        return restaurants;
     }
-
-    public ArrayList<Restaurant> getRestaurants() {
-        return Restaurants;
-    }
-
 }

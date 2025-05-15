@@ -1,59 +1,41 @@
 package entity;
 
 import jakarta.persistence.*;
-
-import java.util.ArrayList;
+import java.util.*;
 
 @Entity
 public class Food {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id;
-    @Column(name = "Name", nullable = false)
-    private String Name;
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
 
     @ElementCollection
-    @CollectionTable(name = "Discirption", joinColumns = @JoinColumn(name = "FoodId"))
-    @Column(name = "Discirptions")
-    private ArrayList<String> Discirption = new ArrayList<>();
-
+    @CollectionTable(name = "food_description", joinColumns = @JoinColumn(name = "food_id"))
+    @Column(name = "description")
+    private List<String> description = new ArrayList<>();
 
     @ElementCollection
-    @CollectionTable(name = "Comment", joinColumns = @JoinColumn(name = "FoodId"))
-    @Column(name = "Comments")
-    private ArrayList<String> Comment = new ArrayList<>();
+    @CollectionTable(name = "food_comments", joinColumns = @JoinColumn(name = "food_id"))
+    @Column(name = "comment")
+    private List<String> comments = new ArrayList<>();
 
-    @Column(name = "Number", nullable = false)
-    private int Number;
+    @Column(nullable = false)
+    private int number;
 
     @ManyToOne
-    @JoinColumn(name = "Restuarant")
-    private Restaurant Restaurant;
+    @JoinColumn(name = "restaurant_id")
+    private Restaurant restaurant;
 
+    public Food() {}
 
     public Food(String name, int number) {
-        this.Name = name;
-        this.Number = number;
+        this.name = name;
+        this.number = number;
     }
 
-
-    public String getName() {
-        return Name;
-    }
-
-    public void setName(String name) {
-        Name = name;
-    }
-
-    public int getNumber() {
-        return Number;
-    }
-
-    public void setNumber(int number) {
-        Number = number;
-    }
-
-    public Restaurant getRestaurant() {
-        return Restaurant;
-    }
+    // Getters & Setters
 }

@@ -2,23 +2,24 @@ package entity;
 
 import jakarta.persistence.*;
 
-import java.util.ArrayList;
+import java.util.*;
 
 @Entity
 public class Restaurant {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToMany(mappedBy = "Seller", cascade = CascadeType.ALL)
-    private ArrayList<Restaurant> Restaurants = new ArrayList<Restaurant>();
+    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL)
+    private List<Food> foods = new ArrayList<>();
 
     @ElementCollection
-    @CollectionTable(name = "Comment", joinColumns = @JoinColumn(name = "RestuarantId"))
-    @Column(name = "Comments")
-    private ArrayList<String> Comment = new ArrayList<>();
+    @CollectionTable(name = "restaurant_comments", joinColumns = @JoinColumn(name = "restaurant_id"))
+    @Column(name = "comment")
+    private List<String> comments = new ArrayList<>();
 
     @ManyToOne
-    @JoinColumn(name = "Seller-id", nullable = false)
+    @JoinColumn(name = "seller_id", nullable = false)
     private Seller seller;
 }
