@@ -1,22 +1,23 @@
 package main;
 import com.sun.net.httpserver.HttpServer;
 import entity.*;
+import HttpHandeler.*;
 import org.hibernate.SessionFactory;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) {
         try {
-            HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
+            HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
+            server.createContext("/restaurant", new RestaurantHandler());
+            server.createContext("/User", new UserHandeler());
 
+            server.start();
         }catch (IOException e){
             System.out.println("Error: " + e.getMessage());
         }
