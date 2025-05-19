@@ -30,6 +30,12 @@ public class Food {
     @JoinColumn(name = "restaurant_id")
     private Restaurant restaurant;
 
+    @OneToOne(mappedBy = "food", cascade = CascadeType.ALL)
+    private FoodProfile foodProfile;
+
+    @Enumerated(EnumType.STRING)
+    private  CategoryFood categoryFood;
+
     public Food() {}
 
     public Food(String name, int number) {

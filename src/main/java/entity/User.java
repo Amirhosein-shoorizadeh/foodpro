@@ -28,17 +28,19 @@ public abstract class User {
     @Column(name = "Email", unique = true)
     private String Email;
 
-    @Column(name = "Address", nullable = false)
-    private String Address;
 
-    public User(String username, String password, String name, String family, String phoneNumber, String email, String address) {
+    @OneToOne(mappedBy = "user",cascade = CascadeType.ALL)
+    private Profile profile;
+
+
+    public User( String username, String password, String name, String family, String phoneNumber, String email) {
         this.Username = username;
         this.Password = password;
         this.Name = name;
         this.Family = family;
         this.PhoneNumber = phoneNumber;
         this.Email = email;
-        this.Address = address;
+
     }
 
     public User() {
@@ -89,22 +91,9 @@ public abstract class User {
         return PhoneNumber;
     }
 
-    public void setPhoneNumber(String phoneNumber) {
-        PhoneNumber = phoneNumber;
-    }
+    public void setPhoneNumber(String phoneNumber) {PhoneNumber = phoneNumber;}
+    public String getEmail() {return Email;}
+    public void setEmail(String email) {Email = email;}
 
-    public String getEmail() {
-        return Email;
-    }
-
-    public void setEmail(String email) {
-        Email = email;
-    }
-
-    public String getAddress() {
-        return Address;
-    }
-
-    public void setAddress(String address) {Address = address;}
 }
 

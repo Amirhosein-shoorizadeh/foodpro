@@ -22,4 +22,8 @@ public class Restaurant {
     @ManyToOne
     @JoinColumn(name = "seller_id", nullable = false)
     private Seller seller;
+
+    @OneToOne(mappedBy = "restaurant",cascade = CascadeType.ALL)
+    private RestaurantProfile restaurantProfile;
+
 }
