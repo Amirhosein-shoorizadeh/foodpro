@@ -10,28 +10,28 @@ public abstract class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long Id;
 
-    @Column(name = "Username",unique = true, nullable = false)
+    @Column(name = "Username", unique = true, nullable = false)
     private String Username;
 
-    @Column(name = "Password",nullable = false)
+    @Column(name = "Password", nullable = false)
     private String Password;
 
-    @Column(name = "Name",nullable = false)
+    @Column(name = "Name", nullable = false)
     private String Name;
 
-    @Column(name = "Family",nullable = false)
+    @Column(name = "Family", nullable = false)
     private String Family;
 
-    @Column(name = "phoneNumber",nullable = false,unique = true)
+    @Column(name = "phoneNumber", nullable = false, unique = true)
     private String PhoneNumber;
 
-    @Column(name = "Email",unique = true)
+    @Column(name = "Email", unique = true)
     private String Email;
 
-    @Column(name = "Address",nullable = false)
+    @Column(name = "Address", nullable = false)
     private String Address;
 
-    public User( String username, String password, String name, String family, String phoneNumber, String email, String address) {
+    public User(String username, String password, String name, String family, String phoneNumber, String email, String address) {
         this.Username = username;
         this.Password = password;
         this.Name = name;
@@ -40,7 +40,9 @@ public abstract class User {
         this.Email = email;
         this.Address = address;
     }
-    public User() {}
+
+    public User() {
+    }
 
 
     public Long getId() {
@@ -103,8 +105,6 @@ public abstract class User {
         return Address;
     }
 
-    public void setAddress(String address) {
-        Address = address;
-    }
+    public void setAddress(String address) {Address = address;}
 }
 
