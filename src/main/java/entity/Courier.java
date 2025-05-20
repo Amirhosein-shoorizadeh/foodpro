@@ -1,11 +1,16 @@
 package entity;
 
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 
 @Entity
 public class Courier extends User{
-    public Courier(String username, String password, String name, String family, String phoneNumber, String email, String address){
-        super(username, password, name, family, phoneNumber, email);
+
+
+
+    public Courier( String password, String name, String phone, String email, String profileImageBase64, Bankinfo bankinfo, String Address){
+        super( password, name, phone,email,profileImageBase64,bankinfo,Address);
+
     }
     public Courier(){}
 }

@@ -11,15 +11,16 @@ public class Seller extends User {
     @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL)
     private List<Restaurant> restaurants = new ArrayList<>();
 
-    @Column(name = "Address",nullable = false)
-    private String Address;
+
+
+
 
     public Seller() {
     }
 
-    public Seller(String username, String password, String name, String family, String phoneNumber, String email, String address) {
-        super(username, password, name, family, phoneNumber, email);
-        this.Address = address;
+    public Seller(  String password, String name, String phone, String email, String profileImageBase64,Bankinfo bankinfo, String Address) {
+        super( password, name, phone,email,profileImageBase64,bankinfo,Address);
+
     }
 
     public List<Restaurant> getRestaurants() {

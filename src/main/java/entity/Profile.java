@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 public class Profile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long Id;
+    private String Id;
 
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
@@ -22,13 +22,11 @@ public class Profile {
         this.ImagePath = ImagePath;
     }
 
-    public long getId() {
+    public String getId() {
         return Id;
     }
 
-    public void setId(long id) {
-        Id = id;
-    }
+    public void setId(String id) {Id = id;}
 
     public User getUser() {
         return user;

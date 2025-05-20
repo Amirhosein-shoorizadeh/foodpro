@@ -10,13 +10,12 @@ public class Customer extends User {
     @OneToMany(mappedBy = "buyer", cascade = CascadeType.ALL)
     public List<Order> orders = new ArrayList<>();
 
-    @Column(name = "Address",nullable = false)
-    private String Address;
 
     public Customer() {
     }
 
-    public Customer(String username, String password, String name, String family, String phoneNumber, String email) {
-        super(username, password, name, family, phoneNumber, email);
+    public Customer(  String password, String name, String phone, String email, String profileImageBase64, Bankinfo bankinfo, String Address) {
+        super(password, name, phone,email,profileImageBase64,bankinfo,Address);
+
     }
 }

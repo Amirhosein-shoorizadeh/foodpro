@@ -8,92 +8,82 @@ import jakarta.persistence.*;
 public abstract class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id;
+    private String Id;
 
-    @Column(name = "Username", unique = true, nullable = false)
-    private String Username;
+    @Column( nullable = false)
+    private String password;
 
-    @Column(name = "Password", nullable = false)
-    private String Password;
-
-    @Column(name = "Name", nullable = false)
-    private String Name;
-
-    @Column(name = "Family", nullable = false)
-    private String Family;
-
-    @Column(name = "phoneNumber", nullable = false, unique = true)
-    private String PhoneNumber;
-
-    @Column(name = "Email", unique = true)
-    private String Email;
+    @Column(nullable = false)
+    private String fullname;
 
 
-    @OneToOne(mappedBy = "user",cascade = CascadeType.ALL)
-    private Profile profile;
+    @Column( nullable = false, unique = true)
+    private String phone;
+
+    @Column( unique = true)
+    private String email;
 
 
-    public User( String username, String password, String name, String family, String phoneNumber, String email) {
-        this.Username = username;
-        this.Password = password;
-        this.Name = name;
-        this.Family = family;
-        this.PhoneNumber = phoneNumber;
-        this.Email = email;
 
+    @Column(nullable = true)
+    private String profileImageBase64;
+
+    @Embedded
+    private Bankinfo bankinfo;
+
+    @Column(nullable = false)
+    private String Address;
+
+
+    public User( String password, String name, String phone, String email, String profileImageBase64, Bankinfo bankinfo, String Address) {
+
+        this.password = password;
+        this.fullname = name;
+        this.phone = phone;
+        this.email = email;
+        this.profileImageBase64 = profileImageBase64;
+        this.bankinfo = bankinfo;
+        this.Address = Address;
     }
 
     public User() {
     }
 
 
-    public Long getId() {
+    public String getId() {
         return Id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         Id = id;
     }
 
-    public String getUsername() {
-        return Username;
-    }
-
-    public void setUsername(String username) {
-        Username = username;
-    }
 
     public String getPassword() {
-        return Password;
+        return password;
     }
 
     public void setPassword(String password) {
-        Password = password;
+        this.password = password;
     }
 
-    public String getName() {
-        return Name;
+    public String getfullname() {
+        return fullname;
     }
 
-    public void setName(String name) {
-        Name = name;
+    public void setfullName(String name) {
+        this.fullname = name;
     }
 
-    public String getFamily() {
-        return Family;
+
+
+    public String getphone() {
+        return phone;
     }
 
-    public void setFamily(String family) {
-        Family = family;
-    }
-
-    public String getPhoneNumber() {
-        return PhoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {PhoneNumber = phoneNumber;}
-    public String getEmail() {return Email;}
-    public void setEmail(String email) {Email = email;}
+    public void setPhone(String phoneNumber) {this.phone = phoneNumber;}
+    public String getEmail() {return email;}
+    public void setEmail(String email) {this.email = email;}
 
 }
 

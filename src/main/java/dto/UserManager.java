@@ -9,11 +9,14 @@ public class UserManager {
         User user;
         switch (dto.userType.toLowerCase()) {
             case "customer":
-                user = new Customer(dto.username, dto.password, dto.name, dto.family, dto.phoneNumber, dto.email, dto.address);
+                user = new Customer( dto.password, dto.name, dto.phoneNumber, dto.email, dto.profileImageBase64, dto.bankinfo, dto.address );
                 break;
             case "seller":
-                user = new Seller(dto.username, dto.password, dto.name, dto.family, dto.phoneNumber, dto.email, dto.address);
+                user = new Seller(dto.password, dto.name , dto.phoneNumber, dto.email, dto.profileImageBase64,dto.bankinfo,dto.address);
                 break;
+             case "courier":
+                 user = new Courier(dto.password,dto.name, dto.phoneNumber, dto.email,dto.profileImageBase64,dto.bankinfo, dto.address);
+                 break;
             default:
                 return false; // نوع نامعتبر
         }
