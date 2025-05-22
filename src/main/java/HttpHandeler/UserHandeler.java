@@ -1,10 +1,15 @@
 package HttpHandeler;
 
 import com.google.gson.Gson;
-import dto.SignUpManager;
-import dto.UserManager;
+import dao.UserDao;
+import service.SignUpManager;
+import service.UserManager;
+import entity.User;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+
+import exception.*;
+import util.JwtUtil;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,6 +17,10 @@ import java.io.InputStreamReader;
 import java.util.stream.Collectors;
 
 public class UserHandeler implements HttpHandler {
+    static class LoginDto {
+        String phone;
+        String password;
+    }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
@@ -19,33 +28,62 @@ public class UserHandeler implements HttpHandler {
         String path = exchange.getRequestURI().getPath();
 
         if ("POST".equalsIgnoreCase(method)) {
-            String body = new BufferedReader(new InputStreamReader(exchange.getRequestBody()))
-                    .lines().collect(Collectors.joining());
+            String body = new BufferedReader(new InputStreamReader(exchange.getRequestBody())).lines().collect(Collectors.joining());
 
             if (path.equals("/user/signup")) {
-                String response;
-                Gson gson = new Gson();
-                SignUpManager temp = gson.fromJson(body, SignUpManager.class);
-                if ( UserManager.handleSignup(temp)) {
-                    response = "Signup successful";
-                    exchange.sendResponseHeaders(200, response.length());
-                } else {
-                    response = "Signup failed";
-                    exchange.sendResponseHeaders(400, response.length());
-                }
-
-                exchange.getResponseBody().write(response.getBytes());
-                exchange.getResponseBody().close();
-
+                handleSignup(exchange, body); // فقط همین خط کافیه
             } else if (path.equals("/user/login")) {
-                // مشابه signup
+                handleLogin(exchange, body);
             } else {
-                exchange.sendResponseHeaders(404, -1);
+                sendResponse(exchange, 404, "Path not found");
             }
         } else {
-            exchange.sendResponseHeaders(405, -1);
+            sendResponse(exchange, 405, "Method not allowed");
         }
     }
+
+    private void handleSignup(HttpExchange exchange, String body) throws IOException {
+        try {
+            Gson gson = new Gson();
+            SignUpManager temp = gson.fromJson(body, SignUpManager.class);
+            UserManager.handleSignup(temp);
+            sendResponse(exchange, 200, "User registered successfully");
+
+        } catch (UserAlreadyExistsException e) {
+            sendResponse(exchange, 409, e.getMessage());
+        } catch (InvalidUserDataException e) {
+            sendResponse(exchange, 400, e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            sendResponse(exchange, 500, "Internal server error");
+        }
+    }
+
+    private void handleLogin(HttpExchange exchange, String body) throws IOException {
+        try {
+            Gson gson = new Gson();
+            LoginDto loginDto = gson.fromJson(body, LoginDto.class);
+            User user = UserDao.login(loginDto.phone, loginDto.password);
+            if (user != null) {
+                String token = JwtUtil.generateToken(loginDto.phone);
+                sendResponse(exchange, 200, "{\"token\": \"" + token + "\"}");
+            } else {
+                sendResponse(exchange, 401, "Invalid credentials");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            sendResponse(exchange, 500, "Internal server error");
+        }
+    }
+
+
+    private void sendResponse(HttpExchange exchange, int statusCode, String message) throws IOException {
+        byte[] bytes = message.getBytes();
+        exchange.sendResponseHeaders(statusCode, bytes.length);
+        exchange.getResponseBody().write(bytes);
+        exchange.getResponseBody().close();
+    }
+
 
 }
 
