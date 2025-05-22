@@ -57,6 +57,14 @@ public class UserDao {
                     .getSingleResult();
         }
     }
+    public static User getByPhone(String phone) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            String sql = "SELECT * FROM User WHERE phone = :phone";
+            return session.createNativeQuery(sql, Seller.class)
+                    .setParameter("phone", phone)
+                    .getSingleResult();
+        }
+    }
 
 
     public static User login(String phone, String password) {
@@ -75,8 +83,24 @@ public class UserDao {
     public static User isLogined(String phone) {
         Session session = HibernateUtil.getSessionFactory().openSession();
         try {
-            return session.createQuery("FROM User WHERE phone = : phone ", User.class).setParameter("phone", phone).uniqueResult();
+            return session.createQuery("FROM User WHERE phone = :phone ", User.class).setParameter("phone", phone).uniqueResult();
         } finally {
+            session.close();
+        }
+    }
+
+    public static boolean isPhoneExists(String phone) {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        try {
+              Object obj = session.createNativeQuery("SELECT 1 FROM user WHERE phone = :phone LIMIT 1",User.class)
+                   .setParameter("phone", phone)
+                   .uniqueResult();
+              if (obj != null) {
+                  return true;
+              }
+              return false;
+
+        }finally {
             session.close();
         }
     }

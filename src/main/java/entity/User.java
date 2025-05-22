@@ -14,7 +14,7 @@ public abstract class User {
     private String password;
 
     @Column(nullable = false)
-    private String fullname;
+    private String full_name;
 
 
     @Column( nullable = false, unique = true)
@@ -41,12 +41,16 @@ public abstract class User {
     public User( String password, String name, String phone, String email, String profileImageBase64, Bankinfo bankinfo, String Address) {
 
         this.password = password;
-        this.fullname = name;
+        this.full_name = name;
         this.phone = phone;
         this.email = email;
         this.profileImageBase64 = profileImageBase64;
         this.bankinfo = bankinfo;
         this.Address = Address;
+    }
+    public User(long Id,String password, String name, String phone, String email, String profileImageBase64, Bankinfo bankinfo, String Address){
+        this(password,  name,  phone, email,  profileImageBase64, bankinfo, Address);
+        this.Id = Id;
     }
 
     public User() {
@@ -69,13 +73,6 @@ public abstract class User {
         this.password = password;
     }
 
-    public String getfullname() {
-        return fullname;
-    }
-
-    public void setfullName(String name) {
-        this.fullname = name;
-    }
 
     public String getphone() {
         return phone;
@@ -88,5 +85,45 @@ public abstract class User {
     public void setEmail(String email) {this.email = email;}
 
     public abstract String getPhone();
+
+    public String getFull_name() {
+        return full_name;
+    }
+
+    public void setFull_name(String full_name) {
+        this.full_name = full_name;
+    }
+
+    public String getProfileImageBase64() {
+        return profileImageBase64;
+    }
+
+    public void setProfileImageBase64(String profileImageBase64) {
+        this.profileImageBase64 = profileImageBase64;
+    }
+
+    public Bankinfo getBankinfo() {
+        return bankinfo;
+    }
+
+    public void setBankinfo(Bankinfo bankinfo) {
+        this.bankinfo = bankinfo;
+    }
+
+    public String getAddress() {
+        return Address;
+    }
+
+    public void setAddress(String address) {
+        Address = address;
+    }
+
+    public Cart getCart() {
+        return cart;
+    }
+
+    public void setCart(Cart cart) {
+        this.cart = cart;
+    }
 }
 

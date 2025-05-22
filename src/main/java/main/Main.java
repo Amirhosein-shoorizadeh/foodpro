@@ -15,7 +15,7 @@ public class Main {
         try {
             HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
             server.createContext("/restaurant", new RestaurantHandler());
-            server.createContext("/User", new UserHandeler());
+            server.createContext("/auth", new UserHandeler());
 
             server.start();
         }catch (IOException e){

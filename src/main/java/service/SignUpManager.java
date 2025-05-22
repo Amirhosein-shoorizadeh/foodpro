@@ -5,8 +5,8 @@ import entity.Bankinfo;
 public class SignUpManager {
 
     public String password;
-    public String name;
-    public String phoneNumber;
+    public String full_name;
+    public String phone;
     public String email;
     public String address;
     public String userType; // customer, seller, ...
