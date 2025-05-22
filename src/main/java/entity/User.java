@@ -61,7 +61,6 @@ public abstract class User {
         Id = id;
     }
 
-
     public String getPassword() {
         return password;
     }
@@ -78,15 +77,16 @@ public abstract class User {
         this.fullname = name;
     }
 
-
-
     public String getphone() {
         return phone;
     }
 
     public void setPhone(String phoneNumber) {this.phone = phoneNumber;}
+
     public String getEmail() {return email;}
+
     public void setEmail(String email) {this.email = email;}
 
+    public abstract String getPhone();
 }
 
