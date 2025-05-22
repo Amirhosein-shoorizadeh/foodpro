@@ -8,7 +8,7 @@ public class FoodProfile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column()
+    @Column
     private String ImagePath;
 
     @OneToOne

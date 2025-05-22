@@ -8,7 +8,7 @@ import jakarta.persistence.*;
 public abstract class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String Id;
+    private long Id;
 
     @Column( nullable = false)
     private String password;
@@ -34,6 +34,9 @@ public abstract class User {
     @Column(nullable = false)
     private String Address;
 
+    @OneToOne(mappedBy = "buyer", cascade = CascadeType.ALL)
+    private Cart cart;
+
 
     public User( String password, String name, String phone, String email, String profileImageBase64, Bankinfo bankinfo, String Address) {
 
@@ -50,11 +53,11 @@ public abstract class User {
     }
 
 
-    public String getId() {
+    public long getId() {
         return Id;
     }
 
-    public void setId(String id) {
+    public void setId(long id) {
         Id = id;
     }
 

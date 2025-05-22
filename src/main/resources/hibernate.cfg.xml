@@ -26,11 +26,12 @@
         <mapping class="entity.Restaurant"/>
         <mapping class="entity.Food"/>
         <mapping class="entity.Order"/>
+        <mapping class="entity.OrderItem"/>
+        <mapping class="entity.Cart"/>
+        <mapping class="entity.CartItem"/>
         <mapping class="entity.CategoryFood"/>
-        <mapping class="entity.Profile"/>
-        <mapping class="entity.StaffProfile"/>
-        <mapping class="entity.RestaurantProfile"/>
-        <mapping class="entity.FoodProfile"/>
+
+
 
 
     </session-factory>

@@ -1,5 +1,6 @@
 package dao;
 
+import entity.Seller;
 import entity.User;
 import jakarta.persistence.EntityManager;
 import org.hibernate.Session;
@@ -35,6 +36,14 @@ public class UserDao {
             return false;
         } finally {
             session.close();
+        }
+    }
+    public static User getById(String id) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            String sql = "SELECT * FROM User WHERE Id = :id";
+            return session.createNativeQuery(sql, Seller.class)
+                    .setParameter("id", id)
+                    .getSingleResult();
         }
     }
 

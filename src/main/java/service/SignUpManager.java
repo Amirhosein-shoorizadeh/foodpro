@@ -1,4 +1,4 @@
-package dto;
+package service;
 
 import entity.Bankinfo;
 
