@@ -18,7 +18,7 @@ public class UserManager {
         String hashedPassword = BCrypt.hashpw(dto.password, BCrypt.gensalt());
         User user;
         switch (dto.role.toLowerCase()) {
-            case "customer":
+            case "buyer":
                 user = new Buyer(hashedPassword, dto.full_name, dto.phone, dto.email, dto.profileImageBase64, dto.bank_info, dto.address);
                 if (dto.address == null) {
                     throw new InvalidUserDataException("Missing required address field.");
@@ -60,7 +60,7 @@ public class UserManager {
         if(user == null){
             throw new NotFoundException("User not found.");
         }
-        if((!user.getPhone().equals(phone)) &&  UserDao.isPhoneExists(profileDto.phone)){
+        if((!user.getPhone().equals(profileDto.phone)) &&  UserDao.isPhoneExists(profileDto.phone)){
             throw new ConflictExceptin("This phone number is already registered");
         }else {
             user.setFull_name(profileDto.full_name);

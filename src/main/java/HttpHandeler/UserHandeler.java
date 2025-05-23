@@ -51,7 +51,7 @@ public class UserHandeler implements HttpHandler {
             }
         }
         else if ("PUT".equalsIgnoreCase(method)) {
-            if(path.matches("/auth/profile/\\d+")){
+            if(path.matches("/auth/profile")){
                 UpdateCurrentProfile(exchange, body);
 
             }else {

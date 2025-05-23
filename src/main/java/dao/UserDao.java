@@ -50,8 +50,8 @@ public class UserDao {
     }
     public static User getById(String id) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            String sql = "SELECT * FROM User WHERE Id = :id";
-            return session.createNativeQuery(sql, Seller.class)
+            String sql = "SELECT * FROM User WHERE id = :id";
+            return session.createNativeQuery(sql, User.class)
                     .setParameter("id", id)
                     .getSingleResult();
         }
@@ -59,7 +59,7 @@ public class UserDao {
     public static User getByPhone(String phone) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             String sql = "SELECT * FROM User WHERE phone = :phone";
-            return session.createNativeQuery(sql, Seller.class)
+            return session.createNativeQuery(sql, User.class)
                     .setParameter("phone", phone)
                     .getSingleResult();
         }
@@ -80,27 +80,21 @@ public class UserDao {
     }
 
     public static User isLogined(String phone) {
-        Session session = HibernateUtil.getSessionFactory().openSession();
-        try {
+
+        try(Session session = HibernateUtil.getSessionFactory().openSession();) {
             return session.createQuery("FROM User WHERE phone = :phone ", User.class).setParameter("phone", phone).uniqueResult();
-        } finally {
-            session.close();
         }
     }
 
     public static boolean isPhoneExists(String phone) {
-        Session session = HibernateUtil.getSessionFactory().openSession();
-        try {
-              Object obj = session.createNativeQuery("SELECT 1 FROM user WHERE phone = :phone LIMIT 1",User.class)
-                   .setParameter("phone", phone)
-                   .uniqueResult();
-              if (obj != null) {
-                  return true;
-              }
-              return false;
 
-        }finally {
-            session.close();
+        try(Session session = HibernateUtil.getSessionFactory().openSession();) {
+            Object result = session.createNativeQuery(
+                            "SELECT 1 FROM User WHERE phone = :phone LIMIT 1")
+                    .setParameter("phone", phone)
+                    .uniqueResult();
+            return result != null;
+
         }
     }
 }

@@ -40,16 +40,6 @@ public class CartDao {
         }
     }
 
-    public static Cart getByCustomerid(String customerid) {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            Transaction tx = session.beginTransaction();
-            String sql = "SELECT * FROM Cart WHERE customer_id = :customerid";
-
-             return session.createNativeQuery(sql,Cart.class)
-                     .setParameter("customerid", customerid)
-                     .uniqueResult();
-        }
-    }
 
 
 }
