@@ -43,7 +43,7 @@ public class UserHandeler implements HttpHandler {
             }
         }
         else if ("GET".equalsIgnoreCase(method)) {
-            if(path.equals("/auth/profile)")) {
+            if(path.equals("/auth/profile")) {
                 GetCurrentProfile(exchange);
             }
             else {

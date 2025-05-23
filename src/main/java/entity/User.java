@@ -29,7 +29,7 @@ public abstract class User {
     private String profileImageBase64;
 
     @Embedded
-    private Bankinfo bankinfo;
+    private Bankinfo bank_info;
 
     @Column(nullable = false)
     private String Address;
@@ -38,14 +38,14 @@ public abstract class User {
     private Cart cart;
 
 
-    public User( String password, String name, String phone, String email, String profileImageBase64, Bankinfo bankinfo, String Address) {
+    public User( String password, String name, String phone, String email, String profileImageBase64, Bankinfo bank_info, String Address) {
 
         this.password = password;
         this.full_name = name;
         this.phone = phone;
         this.email = email;
         this.profileImageBase64 = profileImageBase64;
-        this.bankinfo = bankinfo;
+        this.bank_info = bank_info;
         this.Address = Address;
     }
     public User(long Id,String password, String name, String phone, String email, String profileImageBase64, Bankinfo bankinfo, String Address){
@@ -102,11 +102,11 @@ public abstract class User {
     }
 
     public Bankinfo getBankinfo() {
-        return bankinfo;
+        return bank_info;
     }
 
     public void setBankinfo(Bankinfo bankinfo) {
-        this.bankinfo = bankinfo;
+        this.bank_info = bankinfo;
     }
 
     public String getAddress() {

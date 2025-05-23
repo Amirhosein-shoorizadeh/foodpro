@@ -20,5 +20,6 @@ public class UserProfileDto {
         this.role = role;
         this.address = address;
         this.profileImageBase64 = profileImageBase64;
+        this.bank_info = bank_info;
     }
 }
