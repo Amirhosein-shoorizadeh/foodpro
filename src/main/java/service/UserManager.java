@@ -19,7 +19,7 @@ public class UserManager {
         User user;
         switch (dto.userType.toLowerCase()) {
             case "customer":
-                user = new Customer(hashedPassword, dto.full_name, dto.phone, dto.email, dto.profileImageBase64, dto.bankinfo, dto.address);
+                user = new Buyer(hashedPassword, dto.full_name, dto.phone, dto.email, dto.profileImageBase64, dto.bankinfo, dto.address);
                 if (dto.address == null) {
                     throw new InvalidUserDataException("Missing required address field.");
                 }

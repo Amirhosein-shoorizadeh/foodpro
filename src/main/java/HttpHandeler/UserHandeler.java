@@ -72,7 +72,7 @@ public class UserHandeler implements HttpHandler {
             SignupResponseDto signtemp = new  SignupResponseDto("registered successfullyl",userId,token);
             String json = gson.toJson(signtemp);
             sendResponse(exchange, 200, json);
-            
+
         } catch (UserAlreadyExistsException e) {
             sendResponse(exchange, 409, e.getMessage());
         } catch (InvalidUserDataException e) {

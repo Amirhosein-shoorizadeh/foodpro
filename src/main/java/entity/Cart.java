@@ -13,8 +13,8 @@ public class Cart {
     private long id;
 
     @OneToOne
-    @JoinColumn(name = "customer_id")
-    private Customer customer;
+    @JoinColumn(name = "buyer_id")
+    private Buyer buyer;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> items = new ArrayList<>();
@@ -34,12 +34,12 @@ public class Cart {
         this.id = id;
     }
 
-    public Customer getCustomer() {
-        return customer;
+    public Buyer getBuyer() {
+        return buyer;
     }
 
-    public void setCustomer(Customer customer) {
-        this.customer = customer;
+    public void setBuyer(Buyer buyer) {
+        this.buyer = buyer;
     }
 
     public List<CartItem> getItems() {

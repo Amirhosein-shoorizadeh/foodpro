@@ -6,7 +6,6 @@ import org.hibernate.Session;
 import org.mindrot.jbcrypt.BCrypt;
 import util.HibernateUtil;
 import exception.UserAlreadyExistsException;
-import exception.InvalidUserDataException;
 
 
 public class UserDao {
@@ -16,8 +15,8 @@ public class UserDao {
         synchronized (lock) {
             Session session = HibernateUtil.getSessionFactory().openSession();
             try {
-                if (user.getphone() != null && isLogined(user.getphone()) != null) {
-                    throw new UserAlreadyExistsException("Phone number already registered: " + user.getphone());
+                if (user.getPhone() != null && isLogined(user.getPhone()) != null) {
+                    throw new UserAlreadyExistsException("Phone number already registered: " + user.getPhone());
                 }
                 session.getTransaction().begin();
                 session.persist(user);

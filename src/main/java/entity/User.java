@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 
 
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -74,7 +74,7 @@ public abstract class User {
     }
 
 
-    public String getphone() {
+    public String getPhone() {
         return phone;
     }
 
@@ -84,7 +84,6 @@ public abstract class User {
 
     public void setEmail(String email) {this.email = email;}
 
-    public abstract String getPhone();
 
     public String getFull_name() {
         return full_name;

@@ -19,7 +19,7 @@
 
         <!-- کلاس‌های Entity -->
         <mapping class="entity.User"/>
-        <mapping class="entity.Customer"/>
+        <mapping class="entity.Buyer"/>
         <mapping class="entity.Seller"/>
         <mapping class="entity.Courier"/>
         <mapping class="entity.Admin"/>
