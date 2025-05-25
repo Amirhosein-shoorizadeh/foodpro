@@ -1,6 +1,6 @@
 package dao;
 
-import entity.Seller;
+import entity.Token;
 import entity.User;
 import org.hibernate.Session;
 import org.mindrot.jbcrypt.BCrypt;
@@ -15,7 +15,7 @@ public class UserDao {
         synchronized (lock) {
             Session session = HibernateUtil.getSessionFactory().openSession();
             try {
-                if (user.getPhone() != null && isLogined(user.getPhone()) != null) {
+                if (user.getPhone() != null && isRegistered(user.getPhone()) != null) {
                     throw new UserAlreadyExistsException("Phone number already registered: " + user.getPhone());
                 }
                 session.getTransaction().begin();
@@ -65,7 +65,6 @@ public class UserDao {
         }
     }
 
-
     public static User login(String phone, String password) {
         Session session = HibernateUtil.getSessionFactory().openSession();
         try {
@@ -79,8 +78,7 @@ public class UserDao {
         }
     }
 
-    public static User isLogined(String phone) {
-
+    public static User isRegistered(String phone) {
         try(Session session = HibernateUtil.getSessionFactory().openSession();) {
             return session.createQuery("FROM User WHERE phone = :phone ", User.class).setParameter("phone", phone).uniqueResult();
         }
@@ -97,6 +95,14 @@ public class UserDao {
 
         }
     }
+    public static User findUserByToken(String token) {
+        Token authToken = TokenDao.findByToken(token);
+        if (authToken == null) return null;
+
+        String phone = authToken.getPhoneNumber();
+        return UserDao.getByPhone(phone);
+    }
+
 }
 
 
