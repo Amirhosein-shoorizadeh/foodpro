@@ -130,16 +130,17 @@ public class UserHandeler implements HttpHandler {
                 String token = authHeader.substring(7);
                 String phone = JwtUtil.validateToken(token);
                 if (phone == null) {
-                    sendResponse(exchange, 401, "{\"error\": \"" + "Unauthorized" + "\"}");
-                    return;
+                    throw new InvalidUserDataException("Invalid user data");
                 }
                 UserProfileDto userProfileDto = UserManager.GetCurrentProfile(phone);
                 String json = gson.toJson(userProfileDto);
                 sendResponse(exchange, 200, json);
             } else {
-                sendResponse(exchange, 401, "{\"error\": \"" + "Unauthorized" + "\"}");
+            throw new UnauthorizedException("Unauthorized");
             }
 
+        } catch (UnauthorizedException e) {
+            sendResponse(exchange, 401, "Unauthorized" + e.getMessage());
         } catch (InvalidUserDataException e) {
             sendResponse(exchange, 404, "{\"error\": \"" + e.getMessage() + "\"}");
         } catch (Exception e) {
