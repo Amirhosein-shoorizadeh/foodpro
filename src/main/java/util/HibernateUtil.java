@@ -2,29 +2,18 @@ package util;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
-public class HibernateUtil {
-    private static SessionFactory sessionFactory;
+public class  HibernateUtil {
+    private static final SessionFactory sessionFactory;
 
-    public static void init() {
-        if (sessionFactory == null) {
-            try {
-                sessionFactory = new Configuration().configure().buildSessionFactory();
-                System.out.println("SessionFactory initialized.");
-            } catch (Throwable ex) {
-                System.err.println("SessionFactory creation failed: " + ex);
-            }
+    static {
+        try {
+            sessionFactory = new Configuration().configure().buildSessionFactory();
+        } catch (Throwable ex) {
+            throw new ExceptionInInitializerError(ex);
         }
     }
 
     public static SessionFactory getSessionFactory() {
         return sessionFactory;
     }
-
-    public static void shutdown() {
-        if (sessionFactory != null) {
-            sessionFactory.close();
-            System.out.println("SessionFactory closed.");
-        }
-    }
 }
-

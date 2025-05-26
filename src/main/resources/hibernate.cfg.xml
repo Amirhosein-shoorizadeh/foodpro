@@ -30,7 +30,7 @@
         <mapping class="entity.Cart"/>
         <mapping class="entity.CartItem"/>
         <mapping class="entity.CategoryFood"/>
-        <mapping class="entity.Menu"/>
+        <mapping class="entity.Token"/>
 
 
 

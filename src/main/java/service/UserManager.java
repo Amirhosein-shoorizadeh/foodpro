@@ -1,6 +1,7 @@
 package service;
 
 import dao.UserDao;
+import dto.SignUpManager;
 import dto.UserProfileDto;
 import entity.*;
 import exception.ConflictExceptin;
