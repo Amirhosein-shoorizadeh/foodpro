@@ -5,8 +5,6 @@ import HttpHandeler.*;
 import org.hibernate.SessionFactory;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
-import util.HibernateUtil;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
@@ -24,7 +22,8 @@ public class Main {
             System.out.println("Error: " + e.getMessage());
         }
 
-        Session session = HibernateUtil.getSessionFactory().openSession();
+        SessionFactory factory = new Configuration().configure("hibernate.cfg.xml").addAnnotatedClass(User.class).buildSessionFactory();
+        Session session = factory.getCurrentSession();
         session.beginTransaction();
 
         session.getTransaction().commit();

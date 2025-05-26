@@ -30,6 +30,10 @@ public class Food {
     @JoinColumn(name = "restaurant_id")
     private Restaurant restaurant;
 
+    @ManyToOne
+    @JoinColumn(name = "menu_id")
+    private Menu menu;
+
     @Column
     private String ImagePath;
 
@@ -108,5 +112,13 @@ public class Food {
 
     public void setCategoryFood(CategoryFood categoryFood) {
         this.categoryFood = categoryFood;
+    }
+
+    public Menu getMenu() {
+        return menu;
+    }
+
+    public void setMenu(Menu menu) {
+        this.menu = menu;
     }
 }
