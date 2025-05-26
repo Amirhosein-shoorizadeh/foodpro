@@ -15,6 +15,7 @@ import com.sun.net.httpserver.HttpHandler;
 
 import exception.*;
 import util.JwtUtil;
+import service.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -68,13 +69,15 @@ public class UserHandeler implements HttpHandler {
         try {
             Gson gson = new Gson();
             SignUpManager temp = gson.fromJson(body, SignUpManager.class);
-            long userId = UserManager.handleSignup(temp);
-            String token = JwtUtil.generateToken(temp.phone);
-            Token tokenEntity = new Token(token, temp.phone, JwtUtil.getExpirationDate(token), JwtUtil.getExpirationDate(token), false);
-            TokenDao.save(tokenEntity);
-            SignupResponseDto signtemp = new SignupResponseDto("registered successfullyl", userId, token);
-            String json = gson.toJson(signtemp);
-            sendResponse(exchange, 200, json);
+            if (InvalidInput.checkInput_Register(temp)) {
+                long userId = UserManager.handleSignup(temp);
+                String token = JwtUtil.generateToken(temp.phone);
+                Token tokenEntity = new Token(token, temp.phone, JwtUtil.getExpirationDate(token), JwtUtil.getExpirationDate(token), false);
+                TokenDao.save(tokenEntity);
+                SignupResponseDto signtemp = new SignupResponseDto("registered successfullyl", userId, token);
+                String json = gson.toJson(signtemp);
+                sendResponse(exchange, 200, json);
+            }
         } catch (UserAlreadyExistsException e) {
             sendResponse(exchange, 409, e.getMessage());
         } catch (InvalidUserDataException e) {
@@ -107,7 +110,6 @@ public class UserHandeler implements HttpHandler {
     private void handleLogout(HttpExchange exchange) throws IOException {
         Headers headers = exchange.getRequestHeaders();
         String authHeader = headers.getFirst("Authorization");
-
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             TokenDao.revoke(token);
@@ -154,17 +156,19 @@ public class UserHandeler implements HttpHandler {
                 String token = authHeader.substring(7);
                 String phone = JwtUtil.validateToken(token);
                 if (phone == null) {
-                    sendResponse(exchange, 401, "{\"error\": \"" + "Unauthorized" + "\"}");
-                    return;
+                    throw new UnauthorizedException("Unauthrized");
                 }
                 UserProfileDto userProfileDto = gson.fromJson(body, UserProfileDto.class);
-                UserManager.UpdateUserProfile(userProfileDto, phone);
-                sendResponse(exchange, 200, "{\"message\": \"" + "updated successfully" + "\"}");
-
+                if (InvalidInput.checkInput_EditProfile(userProfileDto)) {
+                    UserManager.UpdateUserProfile(userProfileDto, phone);
+                    sendResponse(exchange, 200, "{\"message\": \"" + "updated successfully" + "\"}");
+                }
             } else {
-                sendResponse(exchange, 401, "{\"error\": \"" + "Unauthorized" + "\"}");
+                throw new UnauthorizedException("Unauthorized");
             }
 
+        } catch (UnauthorizedException e) {
+            sendResponse(exchange, 401, "{\"error\": \"" + e.getMessage() + "\"}");
         } catch (ConflictExceptin e) {
             sendResponse(exchange, 409, "{\"error\": \"" + e.getMessage() + "\"}");
         } catch (NotFoundException e) {
