@@ -62,8 +62,7 @@ public class RestaurantDao {
                     .uniqueResult();
             return result != null;
         }catch (HibernateException e){
-            System.out.println(e.getMessage());
-            return false;
+            throw new RuntimeException(e);
         }
     }
 }

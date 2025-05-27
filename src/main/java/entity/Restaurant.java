@@ -5,27 +5,25 @@ import jakarta.persistence.*;
 import java.util.*;
 
 @Entity
+@Table(name = "Restaurant")
 public class Restaurant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Transient
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL)
     private List<Food> foods = new ArrayList<>();
 
-    @Transient
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL)
     private List<Menu> menus = new ArrayList<>();
 
-    @Transient
     @ElementCollection
     @CollectionTable(name = "restaurant_comments", joinColumns = @JoinColumn(name = "restaurant_id"))
     @Column(name = "comment")
     private List<String> comments = new ArrayList<>();
 
-    @Transient
+
     @ManyToOne
     @JoinColumn(name = "seller_id", nullable = false)
     private Seller seller;
