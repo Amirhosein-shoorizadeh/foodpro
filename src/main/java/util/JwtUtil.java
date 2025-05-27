@@ -1,6 +1,8 @@
 package util;
 
 import dao.*;
+import exception.UnauthorizedException;
+import entity.Token;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
@@ -26,9 +28,12 @@ public class JwtUtil {
                 .compact();
     }
 
-    public static String validateToken(String token) {
-        if (TokenDao.isRevoked(token)) return null;
-
+    public static String validateToken(String token) throws Exception {
+        if (TokenDao.isRevoked(token)) throw new UnauthorizedException("Token is revoked");
+        Token tokenEntity = TokenDao.findByToken(token);
+        if (tokenEntity == null) {
+            throw new UnauthorizedException("Token not found");
+        }
         try {
             byte[] keyBytes = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
             Key key = new SecretKeySpec(keyBytes, SignatureAlgorithm.HS256.getJcaName());
@@ -39,7 +44,7 @@ public class JwtUtil {
                     .getBody()
                     .getSubject();
         } catch (Exception e) {
-            return null;
+            throw new UnauthorizedException("Erors in :" + e.getMessage());
         }
     }
 

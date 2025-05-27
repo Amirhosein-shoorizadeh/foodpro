@@ -11,13 +11,13 @@
       </jdbc-additional-properties>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="hibernate.cfg.xml/Hibernate" uuid="62cea551-a583-4a67-a750-e662ca992158">
+    <data-source source="LOCAL" name="hibernate.cfg.xml/Hibernate" uuid="78c2cb09-dceb-4da1-80b4-63174a218d3d">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <imported>true</imported>
       <remarks>Hibernate
 
-C:/Users/Asus/IdeaProjects/YazdFood/src/main/resources/hibernate.cfg.xml</remarks>
+D:/foodpro/src/main/resources/hibernate.cfg.xml</remarks>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
       <jdbc-url>jdbc:sqlite:data.db</jdbc-url>
       <jdbc-additional-properties>
