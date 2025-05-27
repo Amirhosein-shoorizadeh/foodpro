@@ -35,7 +35,6 @@ public class UserHandeler implements HttpHandler {
         String body = new BufferedReader(new InputStreamReader(exchange.getRequestBody())).lines().collect(Collectors.joining());
 
         if ("POST".equalsIgnoreCase(method)) {
-
             if (path.equals("/auth/register")) {
                 handleSignup(exchange, body);
             } else if (path.equals("/auth/login")) {

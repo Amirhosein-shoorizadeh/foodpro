@@ -29,7 +29,9 @@ public class JwtUtil {
     }
 
     public static String validateToken(String token) throws Exception {
-        if (TokenDao.isRevoked(token)) throw new UnauthorizedException("Token is revoked");
+        if (TokenDao.isRevoked(token)) {
+            throw new UnauthorizedException("Token is revoked");
+        }
         Token tokenEntity = TokenDao.findByToken(token);
         if (tokenEntity == null) {
             throw new UnauthorizedException("Token not found");
