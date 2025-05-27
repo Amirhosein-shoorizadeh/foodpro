@@ -67,7 +67,7 @@ public class RestaurantService {
     }
 
 
-    public static void UpdateRestaurant(String token,RestaurantDto restaurantDto) {
+    public static void UpdateRestaurant(String token,RestaurantDto restaurantDto)  {
         String sellerPhone = JwtUtil.validateToken(token);
         if (sellerPhone == null) {
             throw new UnauthorizedException("Unauthorized");

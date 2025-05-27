@@ -99,7 +99,6 @@ public class RestaurantHandler implements HttpHandler {
             sendResponse(exchange, 500, "{\"error\": \"" + e.getMessage() + "\"}");
         }
 
-
     }
 
     private void sendResponse(HttpExchange exchange, int statusCode, String response) throws IOException {
