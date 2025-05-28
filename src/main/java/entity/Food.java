@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.util.*;
 
 @Entity
+@Table(name = "Food")
 public class Food {
 
     @Id
@@ -13,38 +14,49 @@ public class Food {
     @Column(nullable = false)
     private String name;
 
-    @ElementCollection
-    @CollectionTable(name = "food_description", joinColumns = @JoinColumn(name = "food_id"))
-    @Column(name = "description")
-    private List<String> description = new ArrayList<>();
+    @Column
+    private String imageBase64;
 
-    @ElementCollection
-    @CollectionTable(name = "food_comments", joinColumns = @JoinColumn(name = "food_id"))
-    @Column(name = "comment")
-    private List<String> comments = new ArrayList<>();
+   @Column(nullable = false)
+   private String description;
 
     @Column(nullable = false)
-    private int price;
+    private long price;
+
+    @Column(nullable = false)
+    private int supply;
+
+
+
+    @ElementCollection
+    @CollectionTable(name = "keywords", joinColumns = @JoinColumn(name = "food_id"))
+    @Column(name = "keywords")
+    private List<String> keywords = new ArrayList<>();
+
+
 
     @ManyToOne
     @JoinColumn(name = "restaurant_id")
     private Restaurant restaurant;
 
-    @Column
-    private String ImagePath;
+    @ManyToOne
+    @JoinColumn(name = "menu_id")
+    private Menu menu;
 
-    @Enumerated(EnumType.STRING)
-    private  CategoryFood categoryFood;
+
+
 
     public Food() {}
 
-    public Food(String name, int price, Restaurant restaurant, CategoryFood categoryFood) {
-        this.name = name;
-        this.price = price;
+   public Food(Restaurant restaurant,String name, String imageBase64, String description, long price, int supply, List<String> keywords) {
         this.restaurant = restaurant;
-        this.categoryFood = categoryFood;
-
-    }
+        this.name = name;
+        this.imageBase64 = imageBase64;
+        this.description = description;
+        this.price = price;
+        this.supply = supply;
+        this.keywords = keywords;
+   }
 
     public long getId() {
         return id;
@@ -62,23 +74,36 @@ public class Food {
         this.name = name;
     }
 
-    public List<String> getDescription() {
+
+    public String getDescription() {
         return description;
     }
 
-    public void setDescription(List<String> description) {
+    public void setDescription(String description) {
         this.description = description;
     }
 
-    public List<String> getComments() {
-        return comments;
+    public void setPrice(long price) {
+        this.price = price;
     }
 
-    public void setComments(List<String> comments) {
-        this.comments = comments;
+    public int getSupply() {
+        return supply;
     }
 
-    public int getPrice() {
+    public void setSupply(int supply) {
+        this.supply = supply;
+    }
+
+    public List<String> getKeywords() {
+        return keywords;
+    }
+
+    public void setKeywords(List<String> keywords) {
+        this.keywords = keywords;
+    }
+
+    public long getPrice() {
         return price;
     }
 
@@ -94,19 +119,21 @@ public class Food {
         this.restaurant = restaurant;
     }
 
-    public String getImagePath() {
-        return ImagePath;
+    public String getImageBase64() {
+        return imageBase64;
     }
 
-    public void setImagePath(String imagePath) {
-        ImagePath = imagePath;
+    public void setImageBase64(String imageBase64) {
+        this.imageBase64 = imageBase64;
     }
 
-    public CategoryFood getCategoryFood() {
-        return categoryFood;
+
+
+    public Menu getMenu() {
+        return menu;
     }
 
-    public void setCategoryFood(CategoryFood categoryFood) {
-        this.categoryFood = categoryFood;
+    public void setMenu(Menu menu) {
+        this.menu = menu;
     }
 }

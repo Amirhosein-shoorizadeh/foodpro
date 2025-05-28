@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import java.util.*;
 
 @Entity
+@Table(name = "Restaurant")
 public class Restaurant {
 
     @Id
@@ -14,57 +15,134 @@ public class Restaurant {
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL)
     private List<Food> foods = new ArrayList<>();
 
+    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL)
+    private List<Menu> menus = new ArrayList<>();
+
     @ElementCollection
     @CollectionTable(name = "restaurant_comments", joinColumns = @JoinColumn(name = "restaurant_id"))
     @Column(name = "comment")
     private List<String> comments = new ArrayList<>();
+
 
     @ManyToOne
     @JoinColumn(name = "seller_id", nullable = false)
     private Seller seller;
 
     @Column(nullable = false)
-    private String address;
+    private String name;
 
     @Column(nullable = false)
+    private String address;
+
+    @Column(nullable = false,unique = true)
     private String phone;
 
     @Column
-    private String logobace64;
+    private String logobase64;
+
+    @Column
+    private int tax_fee;
+
+    @Column(nullable = false)
+    private long additional_fee;
+
 
     public Restaurant() {}
-    public Restaurant(Seller seller, String address, String phone, String logobace64) {
+    public Restaurant(Seller seller, String name,String address, String phone, String logobace64, int tax_fee, long additional_fee) {
         this.seller = seller;
+        this.name = name;
         this.address = address;
         this.phone = phone;
-        this.logobace64 = logobace64;
+        this.logobase64 = logobace64;
+        this.tax_fee = tax_fee;
+        this.additional_fee = additional_fee;
     }
 
-    public long getId() {return id;}
+    public long getId() {
+        return id;
+    }
 
-    public void setId(long id) {this.id = id;}
+    public void setId(long id) {
+        this.id = id;
+    }
 
-    public List<Food> getFoods() {return foods;}
+    public List<Food> getFoods() {
+        return foods;
+    }
 
-    public void setFoods(List<Food> foods) {this.foods = foods;}
+    public void setFoods(List<Food> foods) {
+        this.foods = foods;
+    }
 
-    public List<String> getComments() {return comments;}
+    public List<String> getComments() {
+        return comments;
+    }
 
-    public void setComments(List<String> comments) {this.comments = comments;}
+    public void setComments(List<String> comments) {
+        this.comments = comments;
+    }
 
-    public Seller getSeller() {return seller;}
+    public Seller getSeller() {
+        return seller;
+    }
 
-    public void setSeller(Seller seller) {this.seller = seller;}
+    public void setSeller(Seller seller) {
+        this.seller = seller;
+    }
 
-    public String getAddress() {return address;}
+    public String getName() {
+        return name;
+    }
 
-    public void setAddress(String address) {this.address = address;}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public String getPhone() {return phone;}
+    public String getAddress() {
+        return address;
+    }
 
-    public void setPhone(String phone) {this.phone = phone;}
+    public void setAddress(String address) {
+        this.address = address;
+    }
 
-    public String getLogobace64() {return logobace64;}
+    public String getPhone() {
+        return phone;
+    }
 
-    public void setLogobace64(String logobace64) {this.logobace64 = logobace64;}
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getLogobase64() {
+        return logobase64;
+    }
+
+    public void setLogobase64(String logobase64) {
+        this.logobase64 = logobase64;
+    }
+
+    public int getTax_fee() {
+        return tax_fee;
+    }
+
+    public void setTax_fee(int tax_fee) {
+        this.tax_fee = tax_fee;
+    }
+
+    public long getAdditional_fee() {
+        return additional_fee;
+    }
+
+    public void setAdditional_fee(long additional_fee) {
+        this.additional_fee = additional_fee;
+    }
+
+    public List<Menu> getMenus() {
+        return menus;
+    }
+
+    public void setMenus(List<Menu> menus) {
+        this.menus = menus;
+    }
 }
