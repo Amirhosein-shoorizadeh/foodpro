@@ -9,6 +9,8 @@ import org.mindrot.jbcrypt.BCrypt;
 import util.HibernateUtil;
 import exception.UserAlreadyExistsException;
 
+import java.util.List;
+
 
 public class UserDao {
     private static final Object lock = new Object(); // قفل اختصاصی
@@ -51,15 +53,6 @@ public class UserDao {
         }
     }
 
-    public static User getById(String id) {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            String sql = "SELECT * FROM User WHERE id = :id";
-            return session.createNativeQuery(sql, User.class)
-                    .setParameter("id", id)
-                    .getSingleResult();
-        }
-    }
-
     public static User getByPhone(String phone) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             String sql = "SELECT * FROM User WHERE phone = :phone";
@@ -97,6 +90,21 @@ public class UserDao {
                     .uniqueResult();
             return result != null;
 
+        }
+    }
+    public static List<User> getAllExceptAdmins() {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        try {
+            session.beginTransaction();
+            List<User> users = session.createQuery("FROM User u WHERE TYPE(u) <> Admin", User.class)
+                    .getResultList();
+            session.getTransaction().commit();
+            return users;
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+            throw e;
+        } finally {
+            session.close();
         }
     }
 

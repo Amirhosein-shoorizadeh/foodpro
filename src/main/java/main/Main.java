@@ -25,6 +25,7 @@ public class Main {
             server.createContext("/auth", new UserHandeler());
             server.createContext("/vendors", new VendorHandler());
             server.createContext("/items",new ItemHandler());
+            server.createContext("/admin",new adminHandler());
             server.start();
         } catch (IOException e) {
             System.out.println("Error: " + e.getMessage());

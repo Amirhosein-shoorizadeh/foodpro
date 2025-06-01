@@ -72,8 +72,9 @@ public class TokenDao {
         Session session = HibernateUtil.getSessionFactory().openSession();
         try {
             session.beginTransaction();
-            session.createQuery("DELETE FROM Token t WHERE t.revoked = true OR t.expiresAt < CURRENT_TIMESTAMP")
-                    .executeUpdate();
+            session.createNativeQuery(
+                    "DELETE FROM Token WHERE revoked = TRUE OR expiresAt < (strftime('%s','now') * 1000)"
+            ).executeUpdate();
             session.getTransaction().commit();
         } catch (Exception e) {
             session.getTransaction().rollback();
