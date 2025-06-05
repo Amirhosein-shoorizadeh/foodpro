@@ -40,6 +40,7 @@ public class UserHandeler implements HttpHandler {
             if (path.equals("/auth/register")) {
                 handleSignup(exchange, body);
             } else if (path.equals("/auth/login")) {
+                System.out.println("mewwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
                 handleLogin(exchange, body);
             } else if (path.equals("/auth/logout")) {
                 handleLogout(exchange);

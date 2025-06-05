@@ -66,6 +66,7 @@ public class UserDao {
         Session session = HibernateUtil.getSessionFactory().openSession();
         try {
             User user = session.createQuery("FROM User WHERE phone = :phone", User.class).setParameter("phone", phone).uniqueResult();
+
             if (user != null && BCrypt.checkpw(password, user.getPassword())) {
                 return user;
             }
