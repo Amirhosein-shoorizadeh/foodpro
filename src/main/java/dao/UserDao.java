@@ -1,11 +1,15 @@
 package dao;
 
+import entity.Buyer;
 import entity.Token;
 import entity.User;
+import exception.UnauthorizedException;
 import org.hibernate.Session;
 import org.mindrot.jbcrypt.BCrypt;
 import util.HibernateUtil;
 import exception.UserAlreadyExistsException;
+
+import java.util.List;
 
 
 public class UserDao {
@@ -48,14 +52,7 @@ public class UserDao {
             session.close();
         }
     }
-    public static User getById(String id) {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            String sql = "SELECT * FROM User WHERE id = :id";
-            return session.createNativeQuery(sql, User.class)
-                    .setParameter("id", id)
-                    .getSingleResult();
-        }
-    }
+
     public static User getByPhone(String phone) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             String sql = "SELECT * FROM User WHERE phone = :phone";
@@ -69,6 +66,7 @@ public class UserDao {
         Session session = HibernateUtil.getSessionFactory().openSession();
         try {
             User user = session.createQuery("FROM User WHERE phone = :phone", User.class).setParameter("phone", phone).uniqueResult();
+
             if (user != null && BCrypt.checkpw(password, user.getPassword())) {
                 return user;
             }
@@ -79,14 +77,14 @@ public class UserDao {
     }
 
     public static User isRegistered(String phone) {
-        try(Session session = HibernateUtil.getSessionFactory().openSession();) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession();) {
             return session.createQuery("FROM User WHERE phone = :phone ", User.class).setParameter("phone", phone).uniqueResult();
         }
     }
 
     public static boolean isPhoneExists(String phone) {
 
-        try(Session session = HibernateUtil.getSessionFactory().openSession();) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession();) {
             Object result = session.createNativeQuery(
                             "SELECT 1 FROM User WHERE phone = :phone LIMIT 1")
                     .setParameter("phone", phone)
@@ -95,12 +93,33 @@ public class UserDao {
 
         }
     }
-    public static User findUserByToken(String token) {
-        Token authToken = TokenDao.findByToken(token);
-        if (authToken == null) return null;
+    public static List<User> getAllExceptAdmins() {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        try {
+            session.beginTransaction();
+            List<User> users = session.createQuery("FROM User u WHERE TYPE(u) <> Admin", User.class)
+                    .getResultList();
+            session.getTransaction().commit();
+            return users;
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+            throw e;
+        } finally {
+            session.close();
+        }
+    }
 
+    public static boolean UserisBuyer (String token) throws UnauthorizedException {
+        Token authToken = TokenDao.findByToken(token);
+        if (authToken == null) {
+            throw new UnauthorizedException("not logined");
+        }
         String phone = authToken.getPhoneNumber();
-        return UserDao.getByPhone(phone);
+        if(getByPhone(phone) instanceof Buyer) {
+            return true;
+        }else{
+            throw new UnauthorizedException("No data Acess" );
+        }
     }
 
 }

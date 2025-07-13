@@ -23,8 +23,6 @@ public abstract class User {
     @Column( unique = true)
     private String email;
 
-
-
     @Column(nullable = true)
     private String profileImageBase64;
 

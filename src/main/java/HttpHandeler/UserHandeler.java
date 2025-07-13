@@ -21,6 +21,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.stream.Collectors;
 
 public class UserHandeler implements HttpHandler {
@@ -36,10 +37,10 @@ public class UserHandeler implements HttpHandler {
         String body = new BufferedReader(new InputStreamReader(exchange.getRequestBody())).lines().collect(Collectors.joining());
 
         if ("POST".equalsIgnoreCase(method)) {
-
             if (path.equals("/auth/register")) {
                 handleSignup(exchange, body);
             } else if (path.equals("/auth/login")) {
+                System.out.println("mewwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
                 handleLogin(exchange, body);
             } else if (path.equals("/auth/logout")) {
                 handleLogout(exchange);
@@ -73,7 +74,7 @@ public class UserHandeler implements HttpHandler {
             if (InvalidInput.checkInput_Register(temp)) {
                 long userId = UserManager.handleSignup(temp);
                 String token = JwtUtil.generateToken(temp.phone);
-                Token tokenEntity = new Token(token, temp.phone, LocalDateTime.now(), JwtUtil.getExpirationDate(token), false);
+                Token tokenEntity = new Token(token, temp.phone, JwtUtil.getExpirationDate(token), JwtUtil.getExpirationDate(token), false);
                 TokenDao.save(tokenEntity);
                 SignupResponseDto signtemp = new SignupResponseDto("registered successfullyl", userId, token);
                 String json = gson.toJson(signtemp);
