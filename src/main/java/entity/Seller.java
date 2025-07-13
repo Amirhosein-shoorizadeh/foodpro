@@ -8,7 +8,7 @@ import java.util.*;
 @Entity
 public class Seller extends User {
 
-    @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     private List<Restaurant> restaurants = new ArrayList<>();
 
 

@@ -4,34 +4,48 @@ import jakarta.persistence.*;
 import java.util.*;
 
 @Entity
-@Table(name = "Orders")
+@Table(name = "orders")
 public class Order {
     @Id @GeneratedValue
     private long id;
 
     private String deliveryAddress;
-    private long customerId;
-    private long vendorId;
+
+    @ManyToOne
+    @JoinColumn(name = "restaurant_id")
+    private Restaurant restaurant;
+
     private long couponId; // nullable
 
-    @OneToMany
-    private List<OrderItemId> itemIds = new ArrayList<>();
+
+
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(name = "order_food",
+            joinColumns = @JoinColumn(name = "order_id"),
+            inverseJoinColumns = @JoinColumn(name = "food_id"))
+    private Set<Food> foods = new HashSet<Food>();
+
 
     private long rawPrice;
     private int taxFee;
     private long additionalFee;
     private int courierFee;
     private long payPrice;
-    private long courierId; // nullable
+
+    @ManyToOne
+    @JoinColumn(name = "courier_id")
+    private  Courier courier; // nullable
 
     @Enumerated(EnumType.STRING)
-    private Status status; // could be validated against enum
+    private OrderStatus status; // could be validated against enum
     private String createdAt;
     private String updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "buyer_id")
     private Buyer buyer;
+
+
 
     public Order() {}
 
@@ -51,20 +65,12 @@ public class Order {
         this.deliveryAddress = deliveryAddress;
     }
 
-    public long getCustomerId() {
-        return customerId;
+    public Restaurant getRestaurant() {
+        return restaurant;
     }
 
-    public void setCustomerId(long customerId) {
-        this.customerId = customerId;
-    }
-
-    public long getVendorId() {
-        return vendorId;
-    }
-
-    public void setVendorId(long vendorId) {
-        this.vendorId = vendorId;
+    public void setRestaurant(Restaurant restaurant) {
+        this.restaurant = restaurant;
     }
 
     public long getCouponId() {
@@ -75,13 +81,6 @@ public class Order {
         this.couponId = couponId;
     }
 
-    public List<OrderItemId> getItemIds() {
-        return itemIds;
-    }
-
-    public void setItemIds(List<OrderItemId> itemIds) {
-        this.itemIds = itemIds;
-    }
 
     public long getRawPrice() {
         return rawPrice;
@@ -123,19 +122,19 @@ public class Order {
         this.payPrice = payPrice;
     }
 
-    public long getCourierId() {
-        return courierId;
+    public Courier getCourier() {
+        return courier;
     }
 
-    public void setCourierId(long courierId) {
-        this.courierId = courierId;
+    public void setCourier(Courier courier) {
+        this.courier = courier;
     }
 
-    public Status getStatus() {
+    public OrderStatus getStatus() {
         return status;
     }
 
-    public void setStatus(Status status) {
+    public void setStatus(OrderStatus status) {
         this.status = status;
     }
 
@@ -161,5 +160,25 @@ public class Order {
 
     public void setBuyer(Buyer buyer) {
         this.buyer = buyer;
+    }
+    public Set<Food> getFoods() {
+        return foods;
+    }
+
+    public void setFoods(Set<Food> foods) {
+        this.foods = foods;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Order order = (Order) o;
+        return id == order.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (id ^ (id >>> 32));
     }
 }

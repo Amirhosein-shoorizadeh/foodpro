@@ -23,6 +23,9 @@ public class Main {
             HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
             server.createContext("/restaurant", new RestaurantHandler());
             server.createContext("/auth", new UserHandeler());
+            server.createContext("/transactions",new OrderHandler());
+            server.createContext("/wallet",new OrderHandler());
+            server.createContext("/payment",new OrderHandler());
             server.start();
         } catch (IOException e) {
             System.out.println("Error: " + e.getMessage());

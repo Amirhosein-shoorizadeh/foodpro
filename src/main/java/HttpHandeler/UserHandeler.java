@@ -20,6 +20,7 @@ import service.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 public class UserHandeler implements HttpHandler {
@@ -72,7 +73,7 @@ public class UserHandeler implements HttpHandler {
             if (InvalidInput.checkInput_Register(temp)) {
                 long userId = UserManager.handleSignup(temp);
                 String token = JwtUtil.generateToken(temp.phone);
-                Token tokenEntity = new Token(token, temp.phone, JwtUtil.getExpirationDate(token), JwtUtil.getExpirationDate(token), false);
+                Token tokenEntity = new Token(token, temp.phone, LocalDateTime.now(), JwtUtil.getExpirationDate(token), false);
                 TokenDao.save(tokenEntity);
                 SignupResponseDto signtemp = new SignupResponseDto("registered successfullyl", userId, token);
                 String json = gson.toJson(signtemp);
@@ -95,7 +96,7 @@ public class UserHandeler implements HttpHandler {
             User user = UserDao.login(loginDto.phone, loginDto.password);
             if (user != null) {
                 String token = JwtUtil.generateToken(loginDto.phone);
-                Token tokenEntity = new Token(token, loginDto.phone, JwtUtil.getExpirationDate(token), JwtUtil.getExpirationDate(token), false);
+                Token tokenEntity = new Token(token, loginDto.phone, LocalDateTime.now(), JwtUtil.getExpirationDate(token), false);
                 TokenDao.save(tokenEntity);
                 sendResponse(exchange, 200, "{\"token\": \"" + token + "\"}");
             } else {

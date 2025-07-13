@@ -1,8 +1,5 @@
 package service;
-import dao.FoodDao;
-import dao.MenuDao;
-import dao.RestaurantDao;
-import dao.UserDao;
+import dao.*;
 import dto.FoodDto;
 import dto.RestaurantDto;
 import entity.*;
@@ -10,7 +7,9 @@ import exception.*;
 import org.json.JSONObject;
 import util.JwtUtil;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class RestaurantService {
 
@@ -46,6 +45,8 @@ public class RestaurantService {
 
         Restaurant restaurant = new Restaurant((Seller) user, name,address, phone, logoBase64, tax_fee, additional_fee);
         RestaurantDao.save(restaurant);
+        ((Seller) user).getRestaurants().add(restaurant);
+        UserDao.update(user);
         return restaurant.getId();
     }
 
@@ -116,8 +117,10 @@ public class RestaurantService {
                 long price = foodDto.price;
                 int supply = foodDto.supply;
                 List<String> keywords = foodDto.keywords;
-                Food food =  new Food(restaurant,name,imageBase64,description,price,supply,keywords);
+                Food food =  new Food(name,imageBase64,description,price,supply,keywords);
+                restaurant.addFood(food);
                 FoodDao.save(food);
+                RestaurantDao.update(restaurant);
                 foodDto.id =food.getId();
                 foodDto.vendor_id = restaurantId;
                 return foodDto;
@@ -152,6 +155,7 @@ public class RestaurantService {
 
     public static void DeleteFood(String SellerPhone,long restaurantId,long foodId) {
         if(canModifyRestaurant(SellerPhone,restaurantId)){
+            Restaurant restaurant = RestaurantDao.getById(restaurantId);
             Food food = FoodDao.getFoodById(foodId);
             if(food == null){
                 throw new NotFoundException("Food not found");
@@ -159,7 +163,9 @@ public class RestaurantService {
             if(food.getRestaurant().getId() != restaurantId){
                 throw new ForbiddenException("restaurant does not have access to this restaurant");
             }
+            restaurant.getFoods().remove(food);
             FoodDao.delete(food);
+            RestaurantDao.update(restaurant);
         }
         else {
             throw new InvalidUserDataException("invalid input");
@@ -172,18 +178,25 @@ public class RestaurantService {
             if(MenuDao.isMenuExists(restaurantId,title)){
                 throw new ConflictExceptin("Menu already exists");
             }
-            MenuDao.save(new Menu(title,restaurant));
+            Menu menu = new Menu(title);
+            restaurant.addMenu(menu);
+            MenuDao.save(menu);
+            RestaurantDao.update(restaurant);
         }
     }
     public static void DeleteMenu(String SellerPhone,long restaurantId,String title){
         if(canModifyRestaurant(SellerPhone,restaurantId)){
+            Restaurant restaurant = RestaurantDao.getById(restaurantId);
             Menu menu = MenuDao.getMenu(restaurantId,title);
             if(menu == null){
                 throw new NotFoundException("Menu not found");
             }
+            restaurant.removeMenu(menu);
             MenuDao.delete(menu);
+            RestaurantDao.update(restaurant);
         }
     }
+
     public static void AddFoodToMenu(String SellerPhone,long restaurantId,long foodId,String title){
         if(canModifyRestaurant(SellerPhone,restaurantId)){
             Food food = FoodDao.getFoodById(foodId);
@@ -197,10 +210,12 @@ public class RestaurantService {
             if(menu == null){
                 throw new NotFoundException("Menu not found");
             }
-            food.setMenu(menu);
+            menu.addFood(food);
             FoodDao.update(food);
+            MenuDao.update(menu);
         }
     }
+
     public static void DeleteFoodFromMenu(String SellerPhone,long restaurantId,long foodId,String title){
         if(canModifyRestaurant(SellerPhone,restaurantId)){
             Food food = FoodDao.getFoodById(foodId);
@@ -213,15 +228,78 @@ public class RestaurantService {
             if(!MenuDao.isMenuExists(restaurantId,title)){
                 throw new NotFoundException("Menu not found");
             }
-            if(food.getMenu() == null || (!food.getMenu().getTitle().equals(title))){
-                throw new NotFoundException(" food item does not belong to this menu");
+            Menu menu = MenuDao.getMenu(restaurantId,title);
+            if(!menu.getFoods().contains(food)){
+                throw new NotFoundException("Food not found in this Menu");
             }
-            food.setMenu(null);
+            menu.getFoods().remove(food);
             FoodDao.update(food);
+            MenuDao.update(menu);
         }
     }
 
 
+    public static List<Order> GetListOfOrder(String SellerPhone,long restaurantId,JSONObject jsonObject){
+        if(canModifyRestaurant(SellerPhone,restaurantId)){
+            Restaurant restaurant = RestaurantDao.getById(restaurantId);
+            String Status = jsonObject.optString("status",null);
+            String Search = jsonObject.optString("search",null);
+            String user = jsonObject.optString("user",null);
+            String courier = jsonObject.optString("courier",null);
+            OrderStatus orderStatus = OrderStatus.valueOf(Status.toUpperCase());
+            List<Order> orders = OrderDao.RestaurantSearchOrders(restaurantId,orderStatus,Search,user,courier);
+            return orders;
+        }
+        return null;
+    }
+
+
+
+
+
+
+
+
+
+    public static void ChangeStatusOfOrder(String SellerPhone,long order_id,String status){
+        Order order = OrderDao.getOrderById(order_id);
+        if(order == null){
+            throw new NotFoundException("Order not found");
+        }
+        Restaurant restaurant = order.getRestaurant();
+        Set<Food> foods = order.getFoods();
+        if(canModifyRestaurant(SellerPhone,restaurant.getId())){
+
+            if(status.equals("accepted")){
+                if( order.getStatus() == OrderStatus.SUBMITTED){
+                    order.setStatus(OrderStatus.WAITING_VENDOR);
+                    for (Food food :  foods){
+                        food.MinusSupply();
+                        FoodDao.update(food);
+                    }
+                }else {
+                    throw new ForbiddenException("This order is not in the correct stage");
+                }
+            }else if(status.equals("rejected")){
+                if(order.getStatus() == OrderStatus.SUBMITTED){
+                    order.setStatus(OrderStatus.CANCELLED);
+                }else {
+                    throw new ForbiddenException("This order is not in the correct stage");
+                }
+            }else if(status.equals("served")){
+                if(order.getStatus() == OrderStatus.WAITING_VENDOR){
+                    order.setStatus(OrderStatus.FINDING_COURIER);
+                }else {
+                    throw new ForbiddenException("This order is not in the correct stage");
+                }
+            }else {
+                throw new ForbiddenException("The status you provided for the order is invalid");
+            }
+            RestaurantDao.update(restaurant);
+            OrderDao.update(order);
+        }
+
+    }
 
 
 
@@ -242,6 +320,9 @@ public class RestaurantService {
         if(!restaurant.getSeller().getPhone().equals(SellerPhone)){
             throw new ForbiddenException("seller does not have access to this restaurant");
         }
+
+
+
         return true;
     }
 

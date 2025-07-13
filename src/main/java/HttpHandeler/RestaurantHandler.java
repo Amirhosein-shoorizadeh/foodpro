@@ -5,6 +5,8 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import dto.FoodDto;
 import dto.RestaurantDto;
+import entity.Food;
+import entity.Order;
 import entity.Restaurant;
 import exception.*;
 import org.json.JSONArray;
@@ -31,6 +33,10 @@ public class RestaurantHandler implements HttpHandler {
             if (method.equals("GET")) {
                 if(path.equals("/restaurants/mine")) {
                     GetListRestaurant(exchange,token);
+                }else if(path.matches("/restaurants/\\d+/orders")) {
+                    String[] pathParts = path.split("/");
+                    long restaurantId = Long.parseLong(pathParts[2]);
+                    GetListOfOrders(exchange,restaurantId,token);
                 }
             }
             else if (method.equals("POST")) {
@@ -80,6 +86,12 @@ public class RestaurantHandler implements HttpHandler {
                     String title = pathParts[4];
                     long foodId = Long.parseLong(pathParts[5]);
                     DeleteFoodFromMenu(exchange,restaurantId,title,foodId,token);
+                }
+            }else if(method.equals("PATCH")) {
+                if (path.equals("/restaurants/orders/\\d+")) {
+                    String[] pathParts = path.split("/");
+                    long OrderId = Long.parseLong(pathParts[3]);
+                    ChangeStatusOfOrder(exchange, OrderId,token);
                 }
             }
             else{
@@ -244,6 +256,52 @@ public class RestaurantHandler implements HttpHandler {
         }
         RestaurantService.DeleteFoodFromMenu(phone,restaurant_id,food_id,title);
         sendResponse(exchange, 200,"{\"message\": \"Item removed from restaurant menu successfully\"}" );
+    }
+    private void GetListOfOrders(HttpExchange exchange,long restaurant_id,String token) throws IOException {
+        String phone = JwtUtil.validateToken(token);
+        if(phone == null){
+            throw new UnauthorizedException("Unauthorized");
+        }
+        String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
+        JSONObject jsonObject = new JSONObject(requestBody);
+        List<Order> orders =RestaurantService.GetListOfOrder(phone,restaurant_id,jsonObject);
+        JSONArray array = new JSONArray();
+        for(Order order : orders){
+            JSONObject obj = new JSONObject();
+            obj.put("id", order.getId());
+            obj.put("delivery_address", order.getDeliveryAddress());
+            obj.put("customer_id", order.getBuyer().getId());
+            obj.put("vendor_id",order.getRestaurant().getId());
+            obj.put("coupon_id",order.getCouponId());
+            JSONArray itemIds = new JSONArray();
+            for (Food item : order.getFoods()) {
+                itemIds.put(item.getId());
+            }
+            obj.put("item_ids", itemIds);
+            obj.put("raw_price", order.getRawPrice());
+            obj.put("tax_fee", order.getTaxFee());
+            obj.put("additional_fee", order.getAdditionalFee());
+            obj.put("courier_fee", order.getCourierFee());
+            obj.put("pay_price", order.getPayPrice());
+            obj.put("courier_id", order.getCourier()==null?JSONObject.NULL:order.getCourier().getId());
+            obj.put("status", order.getStatus().name());
+            obj.put("created_at", order.getCreatedAt());
+            obj.put("updated_at", order.getUpdatedAt());
+            array.put(obj);
+        }
+        sendResponse(exchange,200,array.toString());
+    }
+
+    private void ChangeStatusOfOrder(HttpExchange exchange,long order_id,String token) throws IOException {
+        String phone = JwtUtil.validateToken(token);
+        if(phone == null){
+            throw new UnauthorizedException("Unauthorized");
+        }
+        String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
+        JSONObject jsonObject = new JSONObject(requestBody);
+        String status = jsonObject.getString("status");
+        RestaurantService.ChangeStatusOfOrder(phone,order_id,status);
+        sendResponse(exchange, 200,"{\"message\": \"" + "Order status changed successfully" + "\"}");
     }
 
 

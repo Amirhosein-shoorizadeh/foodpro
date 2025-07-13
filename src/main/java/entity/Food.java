@@ -35,21 +35,22 @@ public class Food {
 
 
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "restaurant_id")
     private Restaurant restaurant;
 
-    @ManyToOne
-    @JoinColumn(name = "menu_id")
-    private Menu menu;
+    @ManyToMany(mappedBy = "foods",cascade = {CascadeType.PERSIST, CascadeType.MERGE},fetch = FetchType.EAGER)
+    private Set<Menu> menus = new HashSet<>();
 
+
+    @ManyToMany(mappedBy = "foods",cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private Set<Order> orders = new HashSet<>();
 
 
 
     public Food() {}
 
-   public Food(Restaurant restaurant,String name, String imageBase64, String description, long price, int supply, List<String> keywords) {
-        this.restaurant = restaurant;
+   public Food(String name, String imageBase64, String description, long price, int supply, List<String> keywords) {
         this.name = name;
         this.imageBase64 = imageBase64;
         this.description = description;
@@ -128,12 +129,37 @@ public class Food {
     }
 
 
-
-    public Menu getMenu() {
-        return menu;
+    public Set<Menu> getMenus() {
+        return menus;
     }
 
-    public void setMenu(Menu menu) {
-        this.menu = menu;
+    public void setMenus(Set<Menu> menus) {
+        this.menus = menus;
+    }
+    public Set<Order> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(Set<Order> orders) {
+        this.orders = orders;
+    }
+    public void MinusSupply() {
+        this.supply--;
+    }
+    public void PlusSupply() {
+        this.supply++;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Food food = (Food) o;
+        return id == food.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (id ^ (id >>> 32));
     }
 }

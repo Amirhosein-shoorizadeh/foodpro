@@ -6,6 +6,8 @@ import jakarta.persistence.Embeddable;
 public class Bankinfo {
     private String bank_name;
     private String account_number;
+    private long walletBalance;
+
     public Bankinfo(){}
     public Bankinfo(String bank_name, String account_number) {
         this.bank_name = bank_name;
@@ -26,5 +28,20 @@ public class Bankinfo {
 
     public void setAccount_number(String account_number) {
         this.account_number = account_number;
+    }
+
+    public long getWalletBalance() {
+        return walletBalance;
+    }
+
+    public void setWalletBalance(long walletBalance) {
+        this.walletBalance = walletBalance;
+    }
+
+    public void increaseWalletBalance(long amount){
+        walletBalance += amount;
+    }
+    public void decreaseWalletBalance(long amount){
+        walletBalance -= amount;
     }
 }

@@ -33,6 +33,7 @@
         <mapping class="entity.Token"/>
         <mapping class="entity.Menu"/>
         <mapping class="entity.OrderItemId"/>
+        <mapping class="entity.PaymentTransaction"/>
 
 
 
