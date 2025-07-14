@@ -11,12 +11,14 @@ import entity.Restaurant;
 import exception.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import service.OrderService;
 import service.RestaurantService;
 import util.JwtUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Set;
 
 public class RestaurantHandler implements HttpHandler {
 
@@ -264,30 +266,10 @@ public class RestaurantHandler implements HttpHandler {
         }
         String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
         JSONObject jsonObject = new JSONObject(requestBody);
-        List<Order> orders =RestaurantService.GetListOfOrder(phone,restaurant_id,jsonObject);
+        Set<Order> orders =RestaurantService.GetListOfOrder(phone,restaurant_id,jsonObject);
         JSONArray array = new JSONArray();
         for(Order order : orders){
-            JSONObject obj = new JSONObject();
-            obj.put("id", order.getId());
-            obj.put("delivery_address", order.getDeliveryAddress());
-            obj.put("customer_id", order.getBuyer().getId());
-            obj.put("vendor_id",order.getRestaurant().getId());
-            obj.put("coupon_id",order.getCouponId());
-            JSONArray itemIds = new JSONArray();
-            for (Food item : order.getFoods()) {
-                itemIds.put(item.getId());
-            }
-            obj.put("item_ids", itemIds);
-            obj.put("raw_price", order.getRawPrice());
-            obj.put("tax_fee", order.getTaxFee());
-            obj.put("additional_fee", order.getAdditionalFee());
-            obj.put("courier_fee", order.getCourierFee());
-            obj.put("pay_price", order.getPayPrice());
-            obj.put("courier_id", order.getCourier()==null?JSONObject.NULL:order.getCourier().getId());
-            obj.put("status", order.getStatus().name());
-            obj.put("created_at", order.getCreatedAt());
-            obj.put("updated_at", order.getUpdatedAt());
-            array.put(obj);
+            array.put(OrderService.convertOrderToJson(order));
         }
         sendResponse(exchange,200,array.toString());
     }

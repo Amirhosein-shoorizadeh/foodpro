@@ -4,18 +4,22 @@ import com.google.gson.Gson;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import dao.OrderDao;
+import dao.PaymentTransactionDao;
 import dao.UserDao;
 import dto.CouponDto;
 import dto.UserProfileDto;
-import entity.Admin;
-import entity.Bankinfo;
-import entity.Coupon;
+import entity.*;
 import exception.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import service.OrderService;
 import util.JwtUtil;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class adminHandler implements HttpHandler {
@@ -30,8 +34,10 @@ public class adminHandler implements HttpHandler {
                 if (path.equals("/admin/users")) {
                     handle_UserList(exchange, body);
                 } else if (path.equals("/admin/orders")) {
-
-                }
+                    AdminSearchOrder(exchange, body);
+                }else if(path.equals("/admin/transactions")) {
+                    AdminSearchTransaction(exchange, body);
+                }else {throw new NotFoundException("Not Found Path");}
             } else if (exchange.getRequestMethod().equals("POST")) {
                 if (path.equals("/admin/coupons")) {
                     handle_CreateCoupon(exchange, body);
@@ -130,6 +136,76 @@ public class adminHandler implements HttpHandler {
             e.printStackTrace();
             sendResponse(exchange, 400, "{\"error\": \"Invalid coupon data: " + e.getMessage() + "\"}");
         }
+    }
+
+    private void AdminSearchOrder(HttpExchange exchange, String body) throws IOException {
+        Headers headers = exchange.getRequestHeaders();
+        String authHeader = headers.getFirst("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new UnauthorizedException("Unauthorized");
+        }
+
+        String token = authHeader.substring(7);
+        String phone = JwtUtil.validateToken(token);
+        if (phone == null) {
+            throw new UnauthorizedException("Unauthorized");
+        }
+
+        var user = UserDao.getByPhone(phone);
+        if (!(user instanceof Admin)) {
+            throw new ForbiddenException("Forbidden");
+        }
+
+        JSONObject jsonObject = new JSONObject(body);
+        String Search = jsonObject.optString("search",null);
+        String Vendor  = jsonObject.optString("vendor",null);
+        String Courier = jsonObject.optString("courier",null);
+        String Customer = jsonObject.optString("customer",null);
+        String Status  = jsonObject.optString("status",null);
+        OrderStatus orderStatus = OrderStatus.valueOf(Status.toUpperCase());
+        Set<Order> orders = OrderDao.AdminSearchOrders(Vendor,orderStatus,Search,Customer,Courier);
+        JSONArray jsonArray = new JSONArray();
+        for (Order order : orders) {
+            jsonArray.put(OrderService.convertOrderToJson(order));
+        }
+        sendResponse(exchange, 200, jsonArray.toString());
+    }
+
+    private void AdminSearchTransaction(HttpExchange exchange, String body) throws IOException {
+        Headers headers = exchange.getRequestHeaders();
+        String authHeader = headers.getFirst("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new UnauthorizedException("Unauthorized");
+        }
+
+        String token = authHeader.substring(7);
+        String phone = JwtUtil.validateToken(token);
+        if (phone == null) {
+            throw new UnauthorizedException("Unauthorized");
+        }
+
+        var user = UserDao.getByPhone(phone);
+        if (!(user instanceof Admin)) {
+            throw new ForbiddenException("Forbidden");
+        }
+
+        JSONObject jsonObject = new JSONObject(body);
+        String Search = jsonObject.optString("search",null);
+        String User  = jsonObject.optString("user",null);
+        String Method  = jsonObject.optString("method",null);
+        String Status  = jsonObject.optString("status",null);
+        Set<PaymentTransaction> TransActions = PaymentTransactionDao.GetTransactionSet(Search,User,Method,Status);
+        JSONArray jsonArray = new JSONArray();
+        for (PaymentTransaction transaction : TransActions) {
+            JSONObject transactionJson = new JSONObject();
+            transactionJson.put("id",transaction.getId());
+            transactionJson.put("order_id",transaction.getOrder().getId());
+            transactionJson.put("user_id",transaction.getBuyer().getId());
+            transactionJson.put("method",transaction.getMethod());
+            transactionJson.put("status",transaction.getStatus());
+            jsonArray.put(transactionJson);
+        }
+        sendResponse(exchange, 200, jsonArray.toString());
     }
 
 

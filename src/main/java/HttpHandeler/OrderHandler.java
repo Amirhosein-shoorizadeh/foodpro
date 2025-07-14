@@ -2,6 +2,7 @@ package HttpHandeler;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import dao.PaymentTransactionDao;
 import dao.UserDao;
 import entity.PaymentTransaction;
 import entity.User;
@@ -35,9 +36,11 @@ public class OrderHandler implements HttpHandler {
             else if(method.equals("POST")) {
                 if(path.equals("/wallet/top-up")) {
                     TopUpWallet(exchange,token);
-                }
+                }else if(path.equals("/payment/online")) {
+                    MakeOnlinePayment(exchange,token);
+                }else {throw new NotFoundException("Not Found PATH");}
             }else {throw new NotFoundException("Not Found Method");}
-            
+
         }catch (UnauthorizedException e){
             sendResponse(exchange, 401, "{\"error\": \"" + e.getMessage() + "\"}");
         }catch (NotFoundException e){
@@ -93,6 +96,26 @@ public class OrderHandler implements HttpHandler {
         }
         OrderService.TopUpWallet(phone, amount);
         sendResponse(exchange, 200, "{\"status\": \"ok\"}");
+    }
+
+    public void MakeOnlinePayment(HttpExchange exchange,String token) throws IOException {
+        String phone = JwtUtil.validateToken(token);
+        if(phone == null){
+            throw new UnauthorizedException("Unauthorized");
+        }
+        String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
+        JSONObject jsonObject = new JSONObject(requestBody);
+        long Order_id = jsonObject.getLong("order_id");
+        String Method = jsonObject.getString("method");
+        PaymentTransaction paymentTransaction = OrderService.MakeOnlinePayment(phone, Order_id, Method);
+        PaymentTransactionDao.savePaymentTransaction(paymentTransaction);
+        JSONObject response = new JSONObject();
+        response.put("id", paymentTransaction.getId());
+        response.put("order_id", paymentTransaction.getOrder().getId());
+        response.put("user_id", paymentTransaction.getBuyer().getId());
+        response.put("method", Method);
+        response.put("status", paymentTransaction.getStatus().name());
+        sendResponse(exchange, 200, response.toString());
     }
 
 

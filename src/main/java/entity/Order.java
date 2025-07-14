@@ -15,11 +15,12 @@ public class Order {
     @JoinColumn(name = "restaurant_id")
     private Restaurant restaurant;
 
-    private long couponId; // nullable
+    @ManyToOne
+    private Coupon coupon; // nullable
 
 
 
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
     @JoinTable(name = "order_food",
             joinColumns = @JoinColumn(name = "order_id"),
             inverseJoinColumns = @JoinColumn(name = "food_id"))
@@ -73,14 +74,13 @@ public class Order {
         this.restaurant = restaurant;
     }
 
-    public long getCouponId() {
-        return couponId;
+    public Coupon getCoupon() {
+        return coupon;
     }
 
-    public void setCouponId(long couponId) {
-        this.couponId = couponId;
+    public void setCoupon(Coupon coupon) {
+        this.coupon = coupon;
     }
-
 
     public long getRawPrice() {
         return rawPrice;

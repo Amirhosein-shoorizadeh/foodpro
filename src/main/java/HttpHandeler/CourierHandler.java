@@ -12,6 +12,8 @@ import util.JwtUtil;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Set;
+
 import dao.*;
 import entity.*;
 import exception.*;
@@ -107,7 +109,7 @@ public class CourierHandler implements HttpHandler {
         }
         String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
         JSONObject jsonObject = new JSONObject(requestBody);
-        List<Order> orders=CourierService.GetHistory(phone,jsonObject);
+        Set<Order> orders=CourierService.GetHistory(phone,jsonObject);
         JSONArray array = new JSONArray();
         for(Order order : orders){
             array.put(OrderService.convertOrderToJson(order));

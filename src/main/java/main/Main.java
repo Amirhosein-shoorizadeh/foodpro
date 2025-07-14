@@ -38,6 +38,9 @@ public class Main {
             server.createContext("/vendors", new VendorHandler());
             server.createContext("/items", new ItemHandler());
             server.createContext("/admin", new adminHandler());
+            server.createContext("/transactions",new OrderHandler());
+            server.createContext("/wallet",new OrderHandler());
+            server.createContext("/payment",new OrderHandler());
             server.start();
         } catch (IOException e) {
             System.out.println("Error: " + e.getMessage());

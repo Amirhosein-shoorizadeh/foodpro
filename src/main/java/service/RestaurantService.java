@@ -239,7 +239,7 @@ public class RestaurantService {
     }
 
 
-    public static List<Order> GetListOfOrder(String SellerPhone,long restaurantId,JSONObject jsonObject){
+    public static Set<Order> GetListOfOrder(String SellerPhone,long restaurantId,JSONObject jsonObject){
         if(canModifyRestaurant(SellerPhone,restaurantId)){
             Restaurant restaurant = RestaurantDao.getById(restaurantId);
             String Status = jsonObject.optString("status",null);
@@ -247,7 +247,7 @@ public class RestaurantService {
             String user = jsonObject.optString("user",null);
             String courier = jsonObject.optString("courier",null);
             OrderStatus orderStatus = OrderStatus.valueOf(Status.toUpperCase());
-            List<Order> orders = OrderDao.RestaurantSearchOrders(restaurantId,orderStatus,Search,user,courier);
+            Set<Order> orders = OrderDao.RestaurantSearchOrders(restaurantId,orderStatus,Search,user,courier);
             return orders;
         }
         return null;

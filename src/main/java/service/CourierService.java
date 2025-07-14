@@ -10,6 +10,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Set;
 
 public class CourierService {
     public static List<Order> GetaVailableRequests(String Phone){
@@ -66,7 +67,7 @@ public class CourierService {
         }
     }
 
-    public static List<Order> GetHistory(String Phone, JSONObject jsonObject){
+    public static Set<Order> GetHistory(String Phone, JSONObject jsonObject){
         User user = UserDao.getByPhone(Phone);
         if(user == null){
             throw new NotFoundException("user not found");
@@ -78,7 +79,7 @@ public class CourierService {
         String vendor = jsonObject.getString("vendor");
         String buyer = jsonObject.getString("user");
         Courier courier = (Courier) user;
-        List<Order> orders = OrderDao.CourierSearchOrders(courier.getId(),search,vendor,buyer);
+        Set<Order> orders = OrderDao.CourierSearchOrders(courier.getId(),search,vendor,buyer);
         return orders;
     }
 

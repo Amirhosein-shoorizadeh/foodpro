@@ -3,7 +3,10 @@ import entity.*;
 import org.hibernate.*;
 import org.hibernate.query.Query;
 import util.HibernateUtil;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class OrderDao {
     private OrderDao() {}
@@ -53,28 +56,28 @@ public class OrderDao {
         }
     }
 
-    public static List<Order> RestaurantSearchOrders(Long restaurantId, OrderStatus status,
-                                           String foodKeyword, String buyerKeyword, String courierKeyword) {
+    public static Set<Order> RestaurantSearchOrders(Long restaurantId, OrderStatus status,
+                                                    String foodKeyword, String buyerKeyword, String courierKeyword) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
-            StringBuilder  jpql =new StringBuilder("""
-    SELECT DISTINCT o FROM Order o
-    JOIN FETCH o.restaurant
-    JOIN FETCH o.buyer
-    LEFT JOIN FETCH o.courier
-    LEFT JOIN FETCH o.foods
-    WHERE o.restaurant.id = :restaurantId
-      AND o.status = :status
-""");
+            StringBuilder jpql = new StringBuilder("""
+            SELECT DISTINCT o FROM Order o
+            JOIN FETCH o.restaurant r
+            JOIN FETCH o.buyer b
+            LEFT JOIN FETCH o.courier c
+            LEFT JOIN FETCH o.foods f
+            WHERE o.restaurant.id = :restaurantId
+              AND o.status = :status
+        """);
 
             if (foodKeyword != null && !foodKeyword.isBlank()) {
                 jpql.append(" AND REPLACE(LOWER(f.name), ' ', '') LIKE :foodKw ");
             }
             if (buyerKeyword != null && !buyerKeyword.isBlank()) {
-                jpql.append(" AND REPLACE(LOWER(b.fullName), ' ', '') LIKE :buyerKw ");
+                jpql.append(" AND REPLACE(LOWER(b.full_name), ' ', '') LIKE :buyerKw ");
             }
             if (courierKeyword != null && !courierKeyword.isBlank()) {
-                jpql.append(" AND REPLACE(LOWER(c.fullName), ' ', '') LIKE :courierKw ");
+                jpql.append(" AND REPLACE(LOWER(c.full_name), ' ', '') LIKE :courierKw ");
             }
 
             Query<Order> query = session.createQuery(jpql.toString(), Order.class)
@@ -91,11 +94,13 @@ public class OrderDao {
                 query.setParameter("courierKw", "%" + courierKeyword.toLowerCase().replace(" ", "") + "%");
             }
 
-            return query.getResultList();
+            List<Order> resultList = query.getResultList();
+            return new HashSet<>(resultList);
         }
     }
 
-    public static List<Order> CourierSearchOrders(Long courierId, String food, String vendor,String buyer) {
+
+    public static Set<Order> CourierSearchOrders(Long courierId, String food, String vendor, String buyer) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             StringBuilder jpql = new StringBuilder("""
@@ -111,7 +116,7 @@ public class OrderDao {
                 jpql.append(" AND REPLACE(LOWER(f.name), ' ', '') LIKE :foodKw ");
             }
             if (buyer != null && !buyer.isBlank()) {
-                jpql.append(" AND REPLACE(LOWER(b.fullName), ' ', '') LIKE :buyerKw ");
+                jpql.append(" AND REPLACE(LOWER(b.full_name), ' ', '') LIKE :buyerKw ");
             }
             if(vendor != null && !vendor.isBlank()) {
                 jpql.append(" AND REPLACE(LOWER(r.name), ' ', '') LIKE :vendorKw ");
@@ -131,8 +136,54 @@ public class OrderDao {
                 query.setParameter("vendorKw", "%" + vendor.toLowerCase().replace(" ", "") + "%");
             }
 
+            List<Order> resultList = query.getResultList();
+            return  new HashSet<>(resultList);
+        }
+    }
 
-            return query.getResultList();
+    public static Set<Order> AdminSearchOrders(String restaurantKeyword, OrderStatus status,
+                                                    String foodKeyword, String buyerKeyword, String courierKeyword) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+
+            StringBuilder jpql = new StringBuilder("""
+            SELECT DISTINCT o FROM Order o
+            JOIN FETCH o.restaurant r
+            JOIN FETCH o.buyer b
+            LEFT JOIN FETCH o.courier c
+            LEFT JOIN FETCH o.foods f
+            WHERE o.status = :status
+        """);
+            if (restaurantKeyword != null && !restaurantKeyword.isBlank()) {
+                jpql.append(" AND REPLACE(LOWER(r.name), ' ', '') LIKE :restaurantKw ");
+            }
+            if (foodKeyword != null && !foodKeyword.isBlank()) {
+                jpql.append(" AND REPLACE(LOWER(f.name), ' ', '') LIKE :foodKw ");
+            }
+            if (buyerKeyword != null && !buyerKeyword.isBlank()) {
+                jpql.append(" AND REPLACE(LOWER(b.full_name), ' ', '') LIKE :buyerKw ");
+            }
+            if (courierKeyword != null && !courierKeyword.isBlank()) {
+                jpql.append(" AND REPLACE(LOWER(c.full_name), ' ', '') LIKE :courierKw ");
+            }
+
+            Query<Order> query = session.createQuery(jpql.toString(), Order.class)
+                    .setParameter("status", status);
+
+            if (restaurantKeyword != null && !restaurantKeyword.isBlank()) {
+                query.setParameter("restaurantKw", "%" + restaurantKeyword.toLowerCase().replace(" ", "") + "%");
+            }
+            if (foodKeyword != null && !foodKeyword.isBlank()) {
+                query.setParameter("foodKw", "%" + foodKeyword.toLowerCase().replace(" ", "") + "%");
+            }
+            if (buyerKeyword != null && !buyerKeyword.isBlank()) {
+                query.setParameter("buyerKw", "%" + buyerKeyword.toLowerCase().replace(" ", "") + "%");
+            }
+            if (courierKeyword != null && !courierKeyword.isBlank()) {
+                query.setParameter("courierKw", "%" + courierKeyword.toLowerCase().replace(" ", "") + "%");
+            }
+
+            List<Order> resultList = query.getResultList();
+            return new HashSet<>(resultList);
         }
     }
 
