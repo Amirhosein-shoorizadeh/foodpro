@@ -1,38 +1,95 @@
 package dao;
 
 import entity.Coupon;
-import entity.User;
-import exception.UserAlreadyExistsException;
+import exception.NotFoundException;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 import util.HibernateUtil;
 
-import static dao.UserDao.isRegistered;
+import java.util.List;
 
 public class CouponDao {
-    private static final Object lock = new Object(); // قفل اختصاصی
 
-    public static void save(Coupon coupon) {
-        synchronized (lock) {
-            Session session = HibernateUtil.getSessionFactory().openSession();
-            try {
-                Coupon existing = session.createQuery("from Coupon where couponCode = :code", Coupon.class)
-                        .setParameter("code", coupon.getCouponCode())
-                        .uniqueResult();
-                if (existing != null) {
-                    throw new RuntimeException("Coupon code already exists!");
-                }
-
-                session.getTransaction().begin();
-                session.persist(coupon);
-                session.getTransaction().commit();
-            } catch (RuntimeException e) {
-                session.getTransaction().rollback();
-                throw e;
-            } finally {
-                session.close();
-            }
+    public static boolean save(Coupon coupon) {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        try {
+            session.beginTransaction();
+            session.persist(coupon);
+            session.getTransaction().commit();
+            return true;
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+            e.printStackTrace();
+            return false;
+        } finally {
+            session.close();
         }
     }
 
+    public static boolean update(Coupon updated) {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        try {
+            session.beginTransaction();
+            Coupon old = session.get(Coupon.class, updated.getId());
+            if (old == null) {
+                throw new NotFoundException("Coupon with id " + updated.getId() + " not found.");
+            }
+
+            old.setCouponCode(updated.getCouponCode());
+            old.setType(updated.getType());
+            old.setValue(updated.getValue());
+            old.setMinPrice(updated.getMinPrice());
+            old.setUserCount(updated.getUserCount());
+            old.setStartDate(updated.getStartDate());
+            old.setEndDate(updated.getEndDate());
+
+            session.merge(old);
+            session.getTransaction().commit();
+            return true;
+
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+            e.printStackTrace();
+            return false;
+        } finally {
+            session.close();
+        }
+    }
+
+    public static boolean deleteById(Long id) {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        try {
+            session.beginTransaction();
+            Coupon coupon = session.get(Coupon.class, id);
+            if (coupon != null) {
+                session.remove(coupon);
+                session.getTransaction().commit();
+                return true;
+            } else {
+                session.getTransaction().rollback();
+                return false;
+            }
+        } finally {
+            session.close();
+        }
+    }
+
+    public static Coupon getByCode(String code) {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        try {
+            return session.createQuery("FROM Coupon WHERE couponCode = :code", Coupon.class)
+                    .setParameter("code", code)
+                    .uniqueResult();
+        } finally {
+            session.close();
+        }
+    }
+
+    public static List<Coupon> getAll() {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        try {
+            return session.createQuery("FROM Coupon", Coupon.class).getResultList();
+        } finally {
+            session.close();
+        }
+    }
 }

@@ -3,7 +3,7 @@ package entity;
 import jakarta.persistence.*;
 
 
-@Entity
+ @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class User {
     @Id

@@ -22,10 +22,8 @@ public class adminHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         try {
-
             String path = exchange.getRequestURI().getPath();
             String body = new BufferedReader(new InputStreamReader(exchange.getRequestBody())).lines().collect(Collectors.joining());
-
             if (exchange.getRequestMethod().equals("GET")) {
                 if (path.equals("/admin/users")) {
                     handle_UserList(exchange, body);
@@ -38,7 +36,7 @@ public class adminHandler implements HttpHandler {
                 }
             } else if (exchange.getRequestMethod().equals("PATCH")) {
                 if (path.equals("/admin/users/\\d+/status")) {
-
+                    handle_UserApproval(exchange, body);
                 }
             } else if (exchange.getRequestMethod().equals("DELETE")) {
             } else if (exchange.getRequestMethod().equals("HEAD")) {
@@ -78,19 +76,8 @@ public class adminHandler implements HttpHandler {
         }
 
         var users = UserDao.getAllExceptAdmins();
-        var dtoList = users.stream()
-                .map(u -> new UserProfileDto(
-                        u.getId(),
-                        u.getFull_name(),
-                        u.getPhone(),
-                        u.getEmail(),
-                        u.getClass().getSimpleName(), // role
-                        u.getAddress(),
-                        u.getProfileImageBase64(),
-                        u.getBankinfo() != null
-                                ? new Bankinfo(u.getBankinfo().getBank_name(), u.getBankinfo().getAccount_number())
-                                : null
-                )).toList();
+        var dtoList = users.stream().map(u -> new UserProfileDto(u.getId(), u.getFull_name(), u.getPhone(), u.getEmail(), u.getClass().getSimpleName(), // role
+                u.getAddress(), u.getProfileImageBase64(), u.getBankinfo() != null ? new Bankinfo(u.getBankinfo().getBank_name(), u.getBankinfo().getAccount_number()) : null)).toList();
 
         String json = gson.toJson(dtoList);
         sendResponse(exchange, 200, json);
@@ -98,16 +85,18 @@ public class adminHandler implements HttpHandler {
 
     }
 
-    private void handle_CreateCoupon(HttpExchange exchange, String body) throws IOException {
+    private void handle_UserApproval(HttpExchange exchange, String body) throws IOException {
         Gson gson = new Gson();
         Headers headers = exchange.getRequestHeaders();
         String authHeader = headers.getFirst("Authorization");
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             throw new UnauthorizedException("Unauthorized");
         }
 
         String token = authHeader.substring(7);
         String phone = JwtUtil.validateToken(token);
+
         if (phone == null) {
             throw new UnauthorizedException("Unauthorized");
         }
@@ -117,7 +106,27 @@ public class adminHandler implements HttpHandler {
             throw new ForbiddenException("Forbidden");
         }
 
+    }
+    private void handle_CreateCoupon(HttpExchange exchange, String body) throws IOException {
         try {
+            Gson gson = new Gson();
+            Headers headers = exchange.getRequestHeaders();
+            String authHeader = headers.getFirst("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                throw new UnauthorizedException("Unauthorized");
+            }
+
+            String token = authHeader.substring(7);
+            String phone = JwtUtil.validateToken(token);
+            if (phone == null) {
+                throw new UnauthorizedException("Unauthorized");
+            }
+
+            var user = UserDao.getByPhone(phone);
+            if (!(user instanceof Admin)) {
+                throw new ForbiddenException("Forbidden");
+            }
+
             CouponDto dto = gson.fromJson(body, CouponDto.class);
 
             Coupon coupon = dto.toEntity();
@@ -125,13 +134,13 @@ public class adminHandler implements HttpHandler {
 //            CouponDao.save(coupon);
 //
             sendResponse(exchange, 201, "{\"message\": \"Coupon created successfully\"}");
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (InvalidUserDataException e) {
             sendResponse(exchange, 400, "{\"error\": \"Invalid coupon data: " + e.getMessage() + "\"}");
+        } catch (Exception e) {
+            throw e;
         }
-    }
 
+    }
 
     private void sendResponse(HttpExchange exchange, int statusCode, String message) throws IOException {
         byte[] bytes = message.getBytes();
@@ -140,5 +149,6 @@ public class adminHandler implements HttpHandler {
         exchange.getResponseBody().write(bytes);
         exchange.getResponseBody().close();
     }
+
 }
 
