@@ -33,7 +33,6 @@ public class CouponDao {
             if (old == null) {
                 throw new NotFoundException("Coupon with id " + updated.getId() + " not found.");
             }
-
             old.setCouponCode(updated.getCouponCode());
             old.setType(updated.getType());
             old.setValue(updated.getValue());

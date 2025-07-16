@@ -45,25 +45,25 @@ public class UserManager {
         return user.getId();
     }
 
-    public static UserProfileDto GetCurrentProfile( String phone){
+    public static UserProfileDto GetCurrentProfile(String phone) {
         User user = UserDao.getByPhone(phone);
         System.out.println(user.getBankinfo().toString() + "1");
-        if(user == null){
+        if (user == null) {
             throw new InvalidUserDataException("User not found.");
         } else {
 
-            return new UserProfileDto(user.getId(), user.getFull_name(), user.getPhone(), user.getEmail(),user.getClass().getSimpleName(),user.getAddress(), user.getProfileImageBase64(), user.getBankinfo());
+            return new UserProfileDto(user.getId(), user.getFull_name(), user.getPhone(), user.getEmail(), user.getClass().getSimpleName(), user.getAddress(), user.getProfileImageBase64(), user.getBankinfo());
         }
     }
 
     public static void UpdateUserProfile(UserProfileDto profileDto, String phone) {
         User user = UserDao.getByPhone(phone);
-        if(user == null){
+        if (user == null) {
             throw new NotFoundException("User not found.");
         }
-        if((!user.getPhone().equals(profileDto.phone)) &&  UserDao.isPhoneExists(profileDto.phone)){
+        if ((!user.getPhone().equals(profileDto.phone)) && UserDao.isPhoneExists(profileDto.phone)) {
             throw new ConflictExceptin("This phone number is already registered");
-        }else {
+        } else {
             user.setFull_name(profileDto.full_name);
             user.setEmail(profileDto.email);
             user.setProfileImageBase64(profileDto.profileImageBase64);

@@ -108,6 +108,9 @@ public class Coupon {
         this.endDate = endDate;
     }
 
+    public void setId(Long couponId) {
+    }
+
     public  static enum Type {
         fixed,
         percent
