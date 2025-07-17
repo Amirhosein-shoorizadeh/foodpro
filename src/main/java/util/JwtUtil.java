@@ -14,7 +14,7 @@ import java.util.Date;
 
 public class JwtUtil {
     private static final String SECRET_KEY = "your-256-bits-ecretkey-1234567890"; // کلید مخفی (در عمل باید امن باشد)
-    private static final long EXPIRATION_TIME = 3600 * 1000;
+    private static final long EXPIRATION_TIME = 10 * 3600 * 1000;
 
     public static String generateToken(String phone) {
         byte[] keyBytes = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
@@ -28,7 +28,7 @@ public class JwtUtil {
                 .compact();
     }
 
-    public static String validateToken(String token) throws Exception {
+    public static String validateToken(String token) throws UnauthorizedException {
         if (TokenDao.isRevoked(token)) throw new UnauthorizedException("Token is revoked");
         Token tokenEntity = TokenDao.findByToken(token);
         if (tokenEntity == null) {

@@ -9,15 +9,30 @@ public class FoodDao {
 
     private FoodDao() {}
 
-    public static void saveFood(Food food) {
+    public static void save(Food food) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             Transaction tx = session.beginTransaction();
             session.persist(food);
             tx.commit();
         }
     }
+    public static void update(Food food) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            Transaction tx = session.beginTransaction();
+            session.update(food);
+            tx.commit();
+        }
+    }
 
-    public static Food getFoodById(String id) {
+    public static void delete(Food food) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            Transaction tx = session.beginTransaction();
+            session.delete(food);
+            tx.commit();
+        }
+    }
+
+    public static Food getFoodById(long id) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             String sql = "SELECT * FROM Food WHERE id = :id";
             return (Food) session.createNativeQuery(sql, Food.class)

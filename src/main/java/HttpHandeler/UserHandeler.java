@@ -20,6 +20,8 @@ import service.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.stream.Collectors;
 
 public class UserHandeler implements HttpHandler {
@@ -35,10 +37,10 @@ public class UserHandeler implements HttpHandler {
         String body = new BufferedReader(new InputStreamReader(exchange.getRequestBody())).lines().collect(Collectors.joining());
 
         if ("POST".equalsIgnoreCase(method)) {
-
             if (path.equals("/auth/register")) {
                 handleSignup(exchange, body);
             } else if (path.equals("/auth/login")) {
+                System.out.println("mewwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
                 handleLogin(exchange, body);
             } else if (path.equals("/auth/logout")) {
                 handleLogout(exchange);
@@ -95,7 +97,7 @@ public class UserHandeler implements HttpHandler {
             User user = UserDao.login(loginDto.phone, loginDto.password);
             if (user != null) {
                 String token = JwtUtil.generateToken(loginDto.phone);
-                Token tokenEntity = new Token(token, loginDto.phone, JwtUtil.getExpirationDate(token), JwtUtil.getExpirationDate(token), false);
+                Token tokenEntity = new Token(token, loginDto.phone, LocalDateTime.now(), JwtUtil.getExpirationDate(token), false);
                 TokenDao.save(tokenEntity);
                 sendResponse(exchange, 200, "{\"token\": \"" + token + "\"}");
             } else {

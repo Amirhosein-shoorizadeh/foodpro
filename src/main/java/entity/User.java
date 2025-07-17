@@ -3,7 +3,7 @@ package entity;
 import jakarta.persistence.*;
 
 
-@Entity
+ @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class User {
     @Id
@@ -22,8 +22,6 @@ public abstract class User {
 
     @Column( unique = true)
     private String email;
-
-
 
     @Column(nullable = true)
     private String profileImageBase64;

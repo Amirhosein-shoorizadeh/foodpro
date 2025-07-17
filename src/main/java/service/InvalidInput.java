@@ -41,4 +41,21 @@ public class InvalidInput {
         }
         return true;
     }
+
+    public  static boolean CheckInput_AddFood(FoodDto foodDto) throws InvalidUserDataException {
+        if(foodDto.name == null || foodDto.name.equals("")) {
+            throw new InvalidUserDataException("Name is required");
+        }else if(foodDto.price == 0) {
+            throw new InvalidUserDataException("Price is required");
+        }else if(foodDto.description == null || foodDto.description.equals("")) {
+            throw new InvalidUserDataException("Description is required");
+        }else if(foodDto.price < 0) {
+            throw new InvalidUserDataException("Price is required");
+        }else if(foodDto.supply < 0) {
+            throw new InvalidUserDataException("Supply is required");
+        }else if(foodDto.keywords == null || foodDto.keywords.equals("") || foodDto.keywords.isEmpty()) {
+            throw new InvalidUserDataException("Keywords is required");
+        }
+        return true;
+    }
 }

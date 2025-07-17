@@ -14,6 +14,7 @@
         <property name="hibernate.show_sql">true</property>
         <property name="hibernate.format_sql">true</property>
 
+
         <!-- 🔧 این خط رو اضافه کن -->
         <property name="hibernate.current_session_context_class">thread</property>
 
@@ -26,12 +27,13 @@
         <mapping class="entity.Restaurant"/>
         <mapping class="entity.Food"/>
         <mapping class="entity.Order"/>
-        <mapping class="entity.OrderItem"/>
         <mapping class="entity.Cart"/>
         <mapping class="entity.CartItem"/>
         <mapping class="entity.CategoryFood"/>
         <mapping class="entity.Token"/>
-
+        <mapping class="entity.Menu"/>
+        <mapping class="entity.OrderItemId"/>
+        <mapping class="entity.Coupon"/>
 
 
 
