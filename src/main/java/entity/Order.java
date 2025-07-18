@@ -20,18 +20,16 @@ public class Order {
 
 
 
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
-    @JoinTable(name = "order_food",
-            joinColumns = @JoinColumn(name = "order_id"),
-            inverseJoinColumns = @JoinColumn(name = "food_id"))
-    private Set<Food> foods = new HashSet<Food>();
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<OrderItem> orderItems = new ArrayList<>();
+
 
 
     private long rawPrice;
     private int taxFee;
     private long additionalFee;
-    private int courierFee;
-    private long payPrice;
+    private long courierFee;
+    private double payPrice;
 
     @ManyToOne
     @JoinColumn(name = "courier_id")
@@ -106,19 +104,19 @@ public class Order {
         this.additionalFee = additionalFee;
     }
 
-    public int getCourierFee() {
+    public long getCourierFee() {
         return courierFee;
     }
 
-    public void setCourierFee(int courierFee) {
+    public void setCourierFee(long courierFee) {
         this.courierFee = courierFee;
     }
 
-    public long getPayPrice() {
+    public double getPayPrice() {
         return payPrice;
     }
 
-    public void setPayPrice(long payPrice) {
+    public void setPayPrice(double payPrice) {
         this.payPrice = payPrice;
     }
 
@@ -161,12 +159,13 @@ public class Order {
     public void setBuyer(Buyer buyer) {
         this.buyer = buyer;
     }
-    public Set<Food> getFoods() {
-        return foods;
+
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
     }
 
-    public void setFoods(Set<Food> foods) {
-        this.foods = foods;
+    public void setOrderItems(List<OrderItem> orderItems) {
+        this.orderItems = orderItems;
     }
 
     @Override

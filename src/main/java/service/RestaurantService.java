@@ -218,6 +218,7 @@ public class RestaurantService {
 
     public static void DeleteFoodFromMenu(String SellerPhone,long restaurantId,long foodId,String title){
         if(canModifyRestaurant(SellerPhone,restaurantId)){
+            Restaurant restaurant = RestaurantDao.getById(restaurantId);
             Food food = FoodDao.getFoodById(foodId);
             if(food == null){
                 throw new NotFoundException("Food not found");
@@ -228,13 +229,18 @@ public class RestaurantService {
             if(!MenuDao.isMenuExists(restaurantId,title)){
                 throw new NotFoundException("Menu not found");
             }
+            System.out.println("kjsbvksvkjsndcjknskcnksnc");
             Menu menu = MenuDao.getMenu(restaurantId,title);
             if(!menu.getFoods().contains(food)){
                 throw new NotFoundException("Food not found in this Menu");
             }
-            menu.getFoods().remove(food);
-            FoodDao.update(food);
+            if (menu.getRestaurant() == null) {
+                throw new RuntimeException("restaurant is null in menu before update");
+            }
+            menu.setRestaurant(restaurant);
+            menu.removeFood(food);
             MenuDao.update(menu);
+            FoodDao.update(food);
         }
     }
 
@@ -267,22 +273,27 @@ public class RestaurantService {
             throw new NotFoundException("Order not found");
         }
         Restaurant restaurant = order.getRestaurant();
-        Set<Food> foods = order.getFoods();
+        List<OrderItem> orderItems = order.getOrderItems();
         if(canModifyRestaurant(SellerPhone,restaurant.getId())){
 
             if(status.equals("accepted")){
                 if( order.getStatus() == OrderStatus.SUBMITTED){
                     order.setStatus(OrderStatus.WAITING_VENDOR);
-                    for (Food food :  foods){
-                        food.MinusSupply();
-                        FoodDao.update(food);
-                    }
                 }else {
                     throw new ForbiddenException("This order is not in the correct stage");
                 }
             }else if(status.equals("rejected")){
                 if(order.getStatus() == OrderStatus.SUBMITTED){
                     order.setStatus(OrderStatus.CANCELLED);
+                    double balance = order.getPayPrice();
+                    Buyer buyer = order.getBuyer();
+                    buyer.getBankinfo().increaseWalletBalance(balance);
+                    UserDao.update(buyer);
+                    for (OrderItem orderItem : orderItems) {
+                        Food food = orderItem.getFood();
+                        food.PlusSupply(orderItem.getQuantity());
+                        FoodDao.update(food);
+                    }
                 }else {
                     throw new ForbiddenException("This order is not in the correct stage");
                 }

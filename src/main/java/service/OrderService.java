@@ -1,16 +1,24 @@
 package service;
 
-import dao.OrderDao;
-import dao.UserDao;
-import dao.PaymentTransactionDao;
+import dao.*;
 import entity.*;
 import exception.ConflictExceptin;
 import exception.ForbiddenException;
+import exception.InvalidUserDataException;
 import exception.NotFoundException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+import org.hibernate.*;
+import org.hibernate.query.Query;
+import util.HibernateUtil;
+
 
 public class OrderService {
     public static JSONObject convertOrderToJson(Order order) {
@@ -19,13 +27,18 @@ public class OrderService {
         obj.put("delivery_address", order.getDeliveryAddress());
         obj.put("customer_id", order.getBuyer().getId());
         obj.put("vendor_id", order.getRestaurant().getId());
-        obj.put("coupon_id", order.getCoupon().getId());
+        obj.put("coupon_id", order.getCoupon() == null ? JSONObject.NULL : order.getCoupon().getId());
 
-        JSONArray itemIds = new JSONArray(order.getFoods().stream()
-                .map(Food::getId)
-                .toList());
+        JSONArray itemsArray = new JSONArray();
+        for (OrderItem item : order.getOrderItems()) {
+            JSONObject itemObj = new JSONObject();
+            itemObj.put("food_id", item.getFood().getId());
+            itemObj.put("food_name", item.getFood().getName());
+            itemObj.put("quantity", item.getQuantity());
+            itemsArray.put(itemObj);
+        }
+        obj.put("items", itemsArray);
 
-        obj.put("item_ids", itemIds);
         obj.put("raw_price", order.getRawPrice());
         obj.put("tax_fee", order.getTaxFee());
         obj.put("additional_fee", order.getAdditionalFee());
@@ -35,8 +48,10 @@ public class OrderService {
         obj.put("status", order.getStatus().name());
         obj.put("created_at", order.getCreatedAt());
         obj.put("updated_at", order.getUpdatedAt());
+
         return obj;
     }
+
     public static List<PaymentTransaction> GetTransactionHistory(String Phone) {
         User user = UserDao.getByPhone(Phone);
         if (user != null) {
@@ -67,13 +82,13 @@ public class OrderService {
                 Order order = OrderDao.getOrderById(Order_id);
                 if(order != null) {
                     if(order.getStatus().name().equals("SUBMITTED")) {
-                        long PayPrice = order.getPayPrice();
+                        double PayPrice = order.getPayPrice();
                         if(Method.equals("online")) {
                             order.setStatus(OrderStatus.WAITING_VENDOR);
                             return new PaymentTransaction(order,buyer,TransactionMethod.online,TransactionStatus.SUCCESS);
                         }
                         else if(Method.equals("wallet")) {
-                            long BuyerWalletBalance = buyer.getBankinfo().getWalletBalance();
+                            double BuyerWalletBalance = buyer.getBankinfo().getWalletBalance();
                             if(BuyerWalletBalance >= PayPrice) {
                                 buyer.getBankinfo().decreaseWalletBalance(PayPrice);
                                 order.setStatus(OrderStatus.WAITING_VENDOR);
@@ -98,4 +113,88 @@ public class OrderService {
 
         }else{throw new NotFoundException("User not found");}
     }
+
+    public static Order SubmitOrder(Buyer buyer, JSONObject jsonObject) {
+        String deliveryAddress = jsonObject.getString("delivery_address");
+        long vendorId = jsonObject.getLong("vendor_id");
+        JSONArray items = jsonObject.getJSONArray("item_ids");
+
+        Restaurant restaurant = RestaurantDao.getById(vendorId);
+        if (restaurant == null) throw new NotFoundException("Restaurant not found");
+
+        List<OrderItem> orderItems = new ArrayList<>();
+        long rawPrice = 0;
+
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            Transaction tx = session.beginTransaction();
+
+            for (int i = 0; i < items.length(); i++) {
+                JSONObject item = items.getJSONObject(i);
+                if (!item.has("item_id") || !item.has("quantity"))
+                    throw new InvalidUserDataException("invalid json");
+
+                long itemId = item.getLong("item_id");
+                int quantity = item.getInt("quantity");
+
+                Food food = FoodDao.getFoodById(itemId);
+                if (food == null) throw new NotFoundException("Food not found");
+                if (food.getSupply() < quantity) throw new ForbiddenException("Supply less than quantity");
+
+                food.MinusSupply(quantity);
+                session.update(food); // update food supply
+
+                rawPrice += food.getPrice() * quantity;
+                OrderItem orderItem = new OrderItem(null, food, quantity); // setOrder later
+                orderItems.add(orderItem);
+            }
+
+            Order order = new Order();
+            order.setBuyer(buyer);
+            order.setRestaurant(restaurant);
+            order.setDeliveryAddress(deliveryAddress);
+            order.setRawPrice(rawPrice);
+            order.setTaxFee(restaurant.getTax_fee());
+            order.setAdditionalFee(restaurant.getAdditional_fee());
+            order.setCourierFee(30000);
+            order.setStatus(OrderStatus.SUBMITTED);
+
+            double payPrice = rawPrice + (rawPrice * restaurant.getTax_fee() / 100.0)
+                    + restaurant.getAdditional_fee() + order.getCourierFee();
+
+            if (jsonObject.has("coupon_id") && !jsonObject.isNull("coupon_id")) {
+                long couponId = jsonObject.getLong("coupon_id");
+                Coupon coupon = CouponDao.findByCouponId(couponId);
+                if (coupon == null) throw new NotFoundException("Coupon not found");
+
+                order.setCoupon(coupon);
+                if (coupon.getType() == Coupon.Type.fixed) {
+                    payPrice -= coupon.getValue();
+                } else if (coupon.getType() == Coupon.Type.percent) {
+                    payPrice -= payPrice * (coupon.getValue() / 100.0);
+                }
+            }
+
+            order.setPayPrice(payPrice);
+
+            LocalDateTime now = LocalDateTime.now();
+            String createdAt = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            order.setCreatedAt(createdAt);
+
+            session.persist(order); // Save order first to get ID
+
+            for (OrderItem item : orderItems) {
+                item.setOrder(order);
+                session.persist(item);
+            }
+
+            session.update(order); // In case coupon changed payPrice
+            tx.commit();
+
+            return order;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to submit order", e);
+        }
+    }
+
 }

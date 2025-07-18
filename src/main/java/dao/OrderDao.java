@@ -11,11 +11,23 @@ import java.util.Set;
 public class OrderDao {
     private OrderDao() {}
 
-    public static void save(Order order) {
+    public static void save(Order order,List<OrderItem> orderItems) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             Transaction tx = session.beginTransaction();
-            session.persist(order);
+
+            session.persist(order); // یا session.save(order)
+
+            for (OrderItem item : orderItems) {
+                item.setOrder(order);
+                session.persist(item);
+            }
+
+            session.update(order); // اگر لازم است، مثلا برای مقدار نهایی پرداخت یا coupon
+
             tx.commit();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to submit order", e);
         }
     }
 
@@ -65,7 +77,8 @@ public class OrderDao {
             JOIN FETCH o.restaurant r
             JOIN FETCH o.buyer b
             LEFT JOIN FETCH o.courier c
-            LEFT JOIN FETCH o.foods f
+            LEFT JOIN FETCH o.orderItems oi
+            LEFT JOIN FETCH oi.food f
             WHERE o.restaurant.id = :restaurantId
               AND o.status = :status
         """);
@@ -100,17 +113,19 @@ public class OrderDao {
     }
 
 
+
     public static Set<Order> CourierSearchOrders(Long courierId, String food, String vendor, String buyer) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             StringBuilder jpql = new StringBuilder("""
-               SELECT DISTINCT o FROM Order o
-               JOIN FETCH o.buyer b
-               JOIN FETCH o.restaurant r
-               LEFT JOIN FETCH o.courier c
-               LEFT JOIN FETCH o.foods f
-               WHERE o.courier.id = :courierId
-               """);
+           SELECT DISTINCT o FROM Order o
+           JOIN FETCH o.buyer b
+           JOIN FETCH o.restaurant r
+           LEFT JOIN FETCH o.courier c
+           LEFT JOIN FETCH o.orderItems oi
+           LEFT JOIN FETCH oi.food f
+           WHERE o.courier.id = :courierId
+        """);
 
             if (food != null && !food.isBlank()) {
                 jpql.append(" AND REPLACE(LOWER(f.name), ' ', '') LIKE :foodKw ");
@@ -118,10 +133,9 @@ public class OrderDao {
             if (buyer != null && !buyer.isBlank()) {
                 jpql.append(" AND REPLACE(LOWER(b.full_name), ' ', '') LIKE :buyerKw ");
             }
-            if(vendor != null && !vendor.isBlank()) {
+            if (vendor != null && !vendor.isBlank()) {
                 jpql.append(" AND REPLACE(LOWER(r.name), ' ', '') LIKE :vendorKw ");
             }
-
 
             Query<Order> query = session.createQuery(jpql.toString(), Order.class)
                     .setParameter("courierId", courierId);
@@ -137,12 +151,13 @@ public class OrderDao {
             }
 
             List<Order> resultList = query.getResultList();
-            return  new HashSet<>(resultList);
+            return new HashSet<>(resultList);
         }
     }
 
+
     public static Set<Order> AdminSearchOrders(String restaurantKeyword, OrderStatus status,
-                                                    String foodKeyword, String buyerKeyword, String courierKeyword) {
+                                               String foodKeyword, String buyerKeyword, String courierKeyword) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             StringBuilder jpql = new StringBuilder("""
@@ -150,9 +165,11 @@ public class OrderDao {
             JOIN FETCH o.restaurant r
             JOIN FETCH o.buyer b
             LEFT JOIN FETCH o.courier c
-            LEFT JOIN FETCH o.foods f
+            LEFT JOIN FETCH o.orderItems oi
+            LEFT JOIN FETCH oi.food f
             WHERE o.status = :status
         """);
+
             if (restaurantKeyword != null && !restaurantKeyword.isBlank()) {
                 jpql.append(" AND REPLACE(LOWER(r.name), ' ', '') LIKE :restaurantKw ");
             }
@@ -186,6 +203,41 @@ public class OrderDao {
             return new HashSet<>(resultList);
         }
     }
+
+
+    public static Set<Order> BuyerSearch(String restaurantKeyword, String foodKeyword, long buyerId) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            StringBuilder jpql = new StringBuilder("""
+            SELECT DISTINCT o FROM Order o
+            JOIN FETCH o.restaurant r
+            JOIN FETCH o.buyer b
+            LEFT JOIN FETCH o.orderItems oi
+            LEFT JOIN FETCH oi.food f
+            WHERE b.id = :id
+        """);
+
+            if (restaurantKeyword != null && !restaurantKeyword.isBlank()) {
+                jpql.append(" AND REPLACE(LOWER(r.name), ' ', '') LIKE :restaurantKw ");
+            }
+            if (foodKeyword != null && !foodKeyword.isBlank()) {
+                jpql.append(" AND REPLACE(LOWER(f.name), ' ', '') LIKE :foodKw ");
+            }
+
+            Query<Order> query = session.createQuery(jpql.toString(), Order.class)
+                    .setParameter("id", buyerId);
+
+            if (restaurantKeyword != null && !restaurantKeyword.isBlank()) {
+                query.setParameter("restaurantKw", "%" + restaurantKeyword.toLowerCase().replace(" ", "") + "%");
+            }
+            if (foodKeyword != null && !foodKeyword.isBlank()) {
+                query.setParameter("foodKw", "%" + foodKeyword.toLowerCase().replace(" ", "") + "%");
+            }
+
+            List<Order> resultList = query.getResultList();
+            return new HashSet<>(resultList);
+        }
+    }
+
 
 
 }

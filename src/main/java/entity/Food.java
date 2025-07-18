@@ -143,11 +143,11 @@ public class Food {
     public void setOrders(Set<Order> orders) {
         this.orders = orders;
     }
-    public void MinusSupply() {
-        this.supply--;
+    public void MinusSupply(int number) {
+        this.supply -= number;
     }
-    public void PlusSupply() {
-        this.supply++;
+    public void PlusSupply(int number) {
+        this.supply += number;
     }
 
     @Override

@@ -55,7 +55,7 @@ public class RestaurantHandler implements HttpHandler {
                 }
             }
             else if (method.equals("PUT")) {
-                if (path.equals("/restaurants/\\\\d+")) {
+                if (path.matches("/restaurants/\\d+")) {
                     String[] pathParts = path.split("/");
                     long id = Long.parseLong(pathParts[pathParts.length - 1]);
                     UpdateRestaurant(exchange, id,token);
@@ -77,12 +77,13 @@ public class RestaurantHandler implements HttpHandler {
                     long restaurantId = Long.parseLong(pathParts[2]);
                     long foodId = Long.parseLong(pathParts[4]);
                     DeleteFood(exchange, restaurantId, foodId,token);
-                }else if(path.matches("/restaurants/\\d+/menu/.+")){
+                }else if(path.matches("/restaurants/\\d+/menu/.+") && (path.split("/").length == 5) ){
                     String[] pathParts = path.split("/");
                     long restaurantId = Long.parseLong(pathParts[2]);
                     String title = pathParts[4];
                     DeleteMenu(exchange, restaurantId, title,token);
-                }else if(path.matches("/restaurants/\\d+/item/.+/\\d+")) {
+                }else if(path.matches("/restaurants/\\d+/menu/.+/\\d+") && (path.split("/").length == 6)) {
+                    System.out.println(6666);
                     String[] pathParts = path.split("/");
                     long restaurantId = Long.parseLong(pathParts[2]);
                     String title = pathParts[4];
@@ -162,7 +163,6 @@ public class RestaurantHandler implements HttpHandler {
             String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
             RestaurantDto restaurantDto = gson.fromJson(requestBody, RestaurantDto.class);
             restaurantDto.setId(restaurant_id);
-
             RestaurantService.UpdateRestaurant(token, restaurantDto);
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("name",restaurantDto.getName());
@@ -253,9 +253,11 @@ public class RestaurantHandler implements HttpHandler {
     }
     private void DeleteFoodFromMenu(HttpExchange exchange,long restaurant_id,String title,long food_id,String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
+        System.out.println(888);
         if(phone == null){
             throw new UnauthorizedException("Unauthorized");
         }
+        System.out.println(5555);
         RestaurantService.DeleteFoodFromMenu(phone,restaurant_id,food_id,title);
         sendResponse(exchange, 200,"{\"message\": \"Item removed from restaurant menu successfully\"}" );
     }

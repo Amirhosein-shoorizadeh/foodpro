@@ -17,7 +17,7 @@ public class MenuDao {
     public static void update(Menu menu) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             Transaction tx = session.beginTransaction();
-            session.update(menu);
+            session.merge(menu);
             tx.commit();
         }
     }
@@ -44,16 +44,17 @@ public class MenuDao {
 
     public static Menu getMenu(long restaurantId, String title) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            return (Menu) session.createNativeQuery(
-                            "SELECT * FROM Menu WHERE restaurant_id = :restaurantId AND title = :title LIMIT 1",
-                            Menu.class)
+            return session.createQuery(
+                            "FROM Menu m WHERE m.restaurant.id = :restaurantId AND m.title = :title", Menu.class)
                     .setParameter("restaurantId", restaurantId)
                     .setParameter("title", title)
+                    .setMaxResults(1)
                     .uniqueResult();
         } catch (HibernateException e) {
             throw new RuntimeException(e);
         }
     }
+
 
 
 

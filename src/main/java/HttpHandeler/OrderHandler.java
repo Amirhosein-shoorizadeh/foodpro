@@ -2,10 +2,11 @@ package HttpHandeler;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import dao.OrderDao;
 import dao.PaymentTransactionDao;
+import dao.RestaurantDao;
 import dao.UserDao;
-import entity.PaymentTransaction;
-import entity.User;
+import entity.*;
 import exception.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -15,6 +16,8 @@ import util.JwtUtil;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Set;
+
 
 public class OrderHandler implements HttpHandler {
 
@@ -31,14 +34,24 @@ public class OrderHandler implements HttpHandler {
             if(method.equals("GET")) {
                 if(path.equals("/transactions")) {
                     GetTransactionHistory(exchange,token);
-                }else{throw new NotFoundException("Not Found PATH");}
+                }else if(path.matches("/orders/\\d+")) {
+                    String[] pathParts = path.split("/");
+                    long order_id = Long.parseLong(pathParts[2]);
+                    GetOrderWithId(exchange,token,order_id);
+                }else if(path.equals("/orders/history")) {
+                    GetOrderHistory(exchange,token);
+                }
+                else{throw new NotFoundException("Not Found PATH");}
             }
             else if(method.equals("POST")) {
                 if(path.equals("/wallet/top-up")) {
                     TopUpWallet(exchange,token);
                 }else if(path.equals("/payment/online")) {
                     MakeOnlinePayment(exchange,token);
-                }else {throw new NotFoundException("Not Found PATH");}
+                }else if(path.equals("/orders")) {
+                    SubmitOrder(exchange,token);
+                }
+                else {throw new NotFoundException("Not Found PATH");}
             }else {throw new NotFoundException("Not Found Method");}
 
         }catch (UnauthorizedException e){
@@ -116,6 +129,79 @@ public class OrderHandler implements HttpHandler {
         response.put("method", Method);
         response.put("status", paymentTransaction.getStatus().name());
         sendResponse(exchange, 200, response.toString());
+    }
+
+    private void GetOrderWithId(HttpExchange exchange,String token,long order_id) throws IOException {
+        String phone = JwtUtil.validateToken(token);
+        if(phone == null){
+            throw new UnauthorizedException("Unauthorized");
+        }
+        User user = UserDao.getByPhone(phone);
+        if(user != null){
+            if(user instanceof Buyer){
+                Buyer buyer = (Buyer)user;
+                Order order = OrderDao.getOrderById(order_id);
+                if(order != null){
+                    if(order.getBuyer().getId() == buyer.getId()){
+                        JSONObject obj = OrderService.convertOrderToJson(order);
+                        sendResponse(exchange,200, obj.toString());
+                    }else throw new  ForbiddenException("Forbidden");
+                }else throw new NotFoundException("Not Found Order");
+            }else throw  new ForbiddenException("Forbidden");
+        }else throw new NotFoundException("Not Found PHONE");
+    }
+
+    private void SubmitOrder(HttpExchange exchange,String token) throws IOException {
+        String phone = JwtUtil.validateToken(token);
+        if(phone == null){
+            throw new UnauthorizedException("Unauthorized");
+        }
+        String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
+        JSONObject jsonObject = new JSONObject(requestBody);
+
+        User user = UserDao.getByPhone(phone);
+        if(user != null){
+            if(user instanceof Buyer){
+                Buyer buyer = (Buyer)user;
+
+                if(jsonObject.has("items") && jsonObject.has("delivery_address") && jsonObject.has("vendor_id") ){
+                    if(!jsonObject.isNull("items") && !jsonObject.isNull("delivery_address") && !jsonObject.isNull("vendor_id")){
+                        if(!jsonObject.optJSONArray("items").isEmpty()){
+                            Order order = OrderService.SubmitOrder(buyer,jsonObject);
+                            JSONObject response = OrderService.convertOrderToJson(order);
+                            sendResponse(exchange, 200, response.toString());
+                        }
+                        else throw new InvalidUserDataException("items empty");
+                    }
+                    else throw new InvalidUserDataException("invalid data");
+                }
+                else throw new InvalidUserDataException("invalid data");
+            }
+            else throw new ForbiddenException("Forbidden");
+        }
+        else throw new NotFoundException("Not Found User");
+    }
+    private void GetOrderHistory(HttpExchange exchange,String token) throws IOException {
+        String phone = JwtUtil.validateToken(token);
+        if(phone == null){
+            throw new UnauthorizedException("Unauthorized");
+        }
+        User user = UserDao.getByPhone(phone);
+        if(user != null){
+            if(user instanceof Buyer){
+                Buyer buyer = (Buyer)user;
+                String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
+                JSONObject jsonObject = new JSONObject(requestBody);
+                String Search = jsonObject.optString("search",null);
+                String Vendor = jsonObject.optString("vendor",null);
+                Set<Order> orders = OrderDao.BuyerSearch(Vendor,Search,buyer.getId());
+                JSONArray jsonArray = new JSONArray();
+                for(Order order : orders){
+                    jsonArray.put(OrderService.convertOrderToJson(order));
+                }
+                sendResponse(exchange, 200, jsonArray.toString());
+            }else throw  new ForbiddenException("Forbidden");
+        }else throw new NotFoundException("Not Found User");
     }
 
 

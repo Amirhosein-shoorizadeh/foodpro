@@ -32,7 +32,7 @@
         <mapping class="entity.CategoryFood"/>
         <mapping class="entity.Token"/>
         <mapping class="entity.Menu"/>
-        <mapping class="entity.OrderItemId"/>
+        <mapping class="entity.OrderItem"/>
         <mapping class="entity.Coupon"/>
         <mapping class="entity.PaymentTransaction"/>
 

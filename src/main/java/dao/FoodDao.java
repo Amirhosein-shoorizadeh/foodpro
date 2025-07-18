@@ -19,7 +19,7 @@ public class FoodDao {
     public static void update(Food food) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             Transaction tx = session.beginTransaction();
-            session.update(food);
+            session.merge(food);
             tx.commit();
         }
     }

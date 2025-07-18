@@ -34,5 +34,13 @@ public class CouponDao {
             }
         }
     }
+    public static Coupon findByCouponId(long couponId) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            return session.createQuery("FROM Coupon WHERE id = :couponId", Coupon.class)
+                    .setParameter("couponId", couponId)
+                    .uniqueResult();
+        }
+    }
+
 
 }

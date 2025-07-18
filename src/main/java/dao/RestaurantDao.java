@@ -1,9 +1,11 @@
 package dao;
 import entity.*;
 import org.hibernate.*;
+import org.hibernate.query.Query;
 import util.HibernateUtil;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class RestaurantDao {
@@ -65,4 +67,48 @@ public class RestaurantDao {
             throw new RuntimeException(e);
         }
     }
+    public static List<Restaurant> getAllRestaurants() {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            return session.createQuery("FROM Restaurant", Restaurant.class).list();
+        } catch (HibernateException e) {
+            throw new RuntimeException("خطا در دریافت لیست رستوران‌ها", e);
+        }
+    }
+
+    public static List<Restaurant> searchRestaurants(String search, List<String> keywords) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            StringBuilder hql = new StringBuilder("SELECT DISTINCT r FROM Restaurant r ");
+            boolean hasKeywords = keywords != null && !keywords.isEmpty();
+            boolean hasSearch = search != null && !search.trim().isEmpty();
+
+            if (hasKeywords) {
+                hql.append("JOIN r.foods f JOIN f.keywords k ");
+            }
+
+            List<String> conditions = new ArrayList<>();
+            if (hasSearch) {
+                conditions.add("LOWER(r.name) LIKE :search");
+            }
+            if (hasKeywords) {
+                conditions.add("LOWER(k) IN :keywords");
+            }
+
+            if (!conditions.isEmpty()) {
+                hql.append("WHERE ").append(String.join(" OR ", conditions));
+            }
+
+            Query<Restaurant> query = session.createQuery(hql.toString(), Restaurant.class);
+
+            if (hasSearch) {
+                query.setParameter("search", "%" + search.toLowerCase() + "%");
+            }
+            if (hasKeywords) {
+                query.setParameter("keywords", keywords.stream().map(String::toLowerCase).toList());
+            }
+
+            return query.getResultList();
+        }
+    }
+
+
 }
