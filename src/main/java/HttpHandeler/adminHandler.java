@@ -36,6 +36,10 @@ public class adminHandler implements HttpHandler {
                     handle_UserList(exchange, body);
                 } else if (path.equals("/admin/orders")) {
 
+                } else if (path.equals("/admin/coupons")) {
+                    handle_CouponList(exchange, body);
+                } else if (path.equals("/admin/coupons/\\d+")) {
+
                 }
             } else if (exchange.getRequestMethod().equals("POST")) {
                 if (path.equals("/admin/coupons")) {
@@ -269,6 +273,40 @@ public class adminHandler implements HttpHandler {
         }
 
         sendResponse(exchange, 200, "{\"message\": \"Coupon deleted successfully\"}");
+    }
+
+    private void handle_getcoupons(HttpExchange exchange) throws IOException {
+        Headers headers = exchange.getRequestHeaders();
+        String authHeader = headers.getFirst("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new UnauthorizedException("Unauthorized");
+        }
+
+        String token = authHeader.substring(7);
+        String phone = JwtUtil.validateToken(token);
+
+        if (phone == null) {
+            throw new UnauthorizedException("Unauthorized");
+        }
+
+        var user = UserDao.getByPhone(phone);
+        if (!(user instanceof Admin)) {
+            throw new ForbiddenException("Forbidden");
+        }
+
+        String path = exchange.getRequestURI().getPath();
+        Long couponId = Long.parseLong(path.substring(path.lastIndexOf("/") + 1));
+
+        Coupon coupon = CouponDao.getByCode(couponId);
+        if (coupon == null) {
+            throw new NotFoundException("Coupon not found");
+        }
+
+        CouponDto dto = new CouponDto(coupon);
+        String json = new Gson().toJson(dto);
+
+        sendResponse(exchange, 200, json);
     }
 
 

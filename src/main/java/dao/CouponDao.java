@@ -72,7 +72,7 @@ public class CouponDao {
         }
     }
 
-    public static Coupon getByCode(String code) {
+    public static Coupon getByCode(Long code) {
         Session session = HibernateUtil.getSessionFactory().openSession();
         try {
             return session.createQuery("FROM Coupon WHERE couponCode = :code", Coupon.class)

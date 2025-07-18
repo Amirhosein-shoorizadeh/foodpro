@@ -3,6 +3,7 @@ package dto;
 import entity.Coupon;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 
 public class CouponDto {
@@ -24,6 +25,18 @@ public class CouponDto {
         this.user_count = user_count;
         this.start_date = start_date;
         this.end_date = end_date;
+    }
+
+    public CouponDto(Coupon coupon) {
+        this.coupon_code = coupon.getCouponCode();
+        this.type = String.valueOf(coupon.getType());
+        this.value = coupon.getValue();
+        this.min_price = coupon.getMinPrice();
+        this.user_count = coupon.getUserCount();
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
+
+        this.start_date = coupon.getStartDate().format(formatter);
+        this.end_date = coupon.getEndDate().format(formatter);
     }
 
     public long getId() {
