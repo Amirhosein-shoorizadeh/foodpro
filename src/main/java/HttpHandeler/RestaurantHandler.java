@@ -182,9 +182,7 @@ public class RestaurantHandler implements HttpHandler {
            String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
            FoodDto foodDto = gson.fromJson(requestBody, FoodDto.class);
             String phone = JwtUtil.validateToken(token);
-            if(phone == null){
-                throw new UnauthorizedException("Unauthorized");
-            }
+
             FoodDto foodDtoOut = RestaurantService.AddFood(phone,foodDto,restaurant_id);
             String json = gson.toJson(foodDtoOut, FoodDto.class);
             sendResponse(exchange, 200, json);
@@ -253,39 +251,11 @@ public class RestaurantHandler implements HttpHandler {
     }
     private void DeleteFoodFromMenu(HttpExchange exchange,long restaurant_id,String title,long food_id,String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
-        System.out.println(888);
         if(phone == null){
             throw new UnauthorizedException("Unauthorized");
         }
-        System.out.println(5555);
         RestaurantService.DeleteFoodFromMenu(phone,restaurant_id,food_id,title);
         sendResponse(exchange, 200,"{\"message\": \"Item removed from restaurant menu successfully\"}" );
-    }
-    private void GetListOfOrders(HttpExchange exchange,long restaurant_id,String token) throws IOException {
-        String phone = JwtUtil.validateToken(token);
-        if(phone == null){
-            throw new UnauthorizedException("Unauthorized");
-        }
-        String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
-        JSONObject jsonObject = new JSONObject(requestBody);
-        Set<Order> orders =RestaurantService.GetListOfOrder(phone,restaurant_id,jsonObject);
-        JSONArray array = new JSONArray();
-        for(Order order : orders){
-            array.put(OrderService.convertOrderToJson(order));
-        }
-        sendResponse(exchange,200,array.toString());
-    }
-
-    private void ChangeStatusOfOrder(HttpExchange exchange,long order_id,String token) throws IOException {
-        String phone = JwtUtil.validateToken(token);
-        if(phone == null){
-            throw new UnauthorizedException("Unauthorized");
-        }
-        String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
-        JSONObject jsonObject = new JSONObject(requestBody);
-        String status = jsonObject.getString("status");
-        RestaurantService.ChangeStatusOfOrder(phone,order_id,status);
-        sendResponse(exchange, 200,"{\"message\": \"" + "Order status changed successfully" + "\"}");
     }
 
 
