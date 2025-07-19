@@ -1,26 +1,41 @@
       package HttpHandeler;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import dao.*;
 import dto.FoodDto;
 import entity.Food;
+import exception.UnauthorizedException;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import util.JwtUtil;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 
-public class ItemHandler implements HttpHandler {
+      public class ItemHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         String method = exchange.getRequestMethod();
-        String path = exchange.getRequestURI().getPath().replaceAll("/+$", "");
+        String path = exchange.getRequestURI().getPath();
+        String authHeader = exchange.getRequestHeaders().getFirst("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new UnauthorizedException("Unauthorized");
+        }
+        String token = authHeader.substring(7); // حذف "Bearer "
 
         if ("GET".equalsIgnoreCase(method)) {
             if (path.matches("^/items/\\d+$")) {
-                handleGetItemById(exchange);
-            } else {
+                handleGetItemById(exchange,token);
+            }else if(path.matches("/items")){
+                GetItems(exchange,token);
+            }
+            else {
                 sendResponse(exchange, 404, "Path not found");
             }
         } else {
@@ -28,8 +43,9 @@ public class ItemHandler implements HttpHandler {
         }
     }
 
-    private void handleGetItemById(HttpExchange exchange) throws IOException {
+    private void handleGetItemById(HttpExchange exchange,String token) throws IOException {
         try {
+            String phone = JwtUtil.validateToken(token);
             Gson gson = new Gson();
             String[] paths = exchange.getRequestURI().getPath().split("/");
             long id = Long.parseLong(paths[paths.length - 1]);
@@ -46,6 +62,26 @@ public class ItemHandler implements HttpHandler {
         } catch (SecurityException e) {
             sendResponse(exchange, 401, "Unauthorized");
         }
+    }
+
+    private void GetItems(HttpExchange exchange,String token) throws IOException {
+        String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
+        String phone = JwtUtil.validateToken(token);
+        JSONObject jsonObject = new JSONObject(requestBody);
+        String search = jsonObject.optString("search",null);
+        long price = Long.parseLong(jsonObject.optString("price",null));
+        JSONArray jsonArray = jsonObject.optJSONArray("keywords");
+        List<String> keywords = new ArrayList<>();
+        for (int i = 0; i < jsonArray.length(); i++) {
+            keywords.add(jsonArray.getString(i));
+        }
+        List<Food> foods =  FoodDao.searchFoods(search,price,keywords);
+        List<FoodDto> dtos = foods.stream()
+                .map(FoodDto::new)
+                .toList();
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String json = gson.toJson(dtos);
+        sendResponse(exchange, 200, json);
     }
 
     private void sendResponse(HttpExchange exchange, int statusCode, String message) throws IOException {

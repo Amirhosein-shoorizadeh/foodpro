@@ -140,38 +140,38 @@ public class RestaurantHandler implements HttpHandler {
     }
 
     private void GetListRestaurant(HttpExchange exchange,String token) throws IOException {
-            List<Restaurant> restaurants = RestaurantService.getSellerRestaurants(token);
-            JSONArray response = new JSONArray();
-            for (Restaurant restaurant : restaurants) {
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("id", restaurant.getId());
-                jsonObject.put("name", restaurant.getName());
-                jsonObject.put("address", restaurant.getAddress());
-                jsonObject.put("phone", restaurant.getPhone());
-                jsonObject.put("logoBase64",restaurant.getLogobase64());
-                jsonObject.put("tax_fee",restaurant.getTax_fee());
-                jsonObject.put("additional_fee",restaurant.getAdditional_fee());
-                response.put(jsonObject);
-            }
-            sendResponse(exchange, 200, response.toString());
+        List<Restaurant> restaurants = RestaurantService.getSellerRestaurants(token);
+        JSONArray response = new JSONArray();
+        for (Restaurant restaurant : restaurants) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("id", restaurant.getId());
+            jsonObject.put("name", restaurant.getName());
+            jsonObject.put("address", restaurant.getAddress());
+            jsonObject.put("phone", restaurant.getPhone());
+            jsonObject.put("logoBase64",restaurant.getLogobase64());
+            jsonObject.put("tax_fee",restaurant.getTax_fee());
+            jsonObject.put("additional_fee",restaurant.getAdditional_fee());
+            response.put(jsonObject);
+        }
+        sendResponse(exchange, 200, response.toString());
     }
 
     private void UpdateRestaurant(HttpExchange exchange,long restaurant_id,String token) throws IOException {
 
         Gson gson = new Gson();
 
-            String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
-            RestaurantDto restaurantDto = gson.fromJson(requestBody, RestaurantDto.class);
-            restaurantDto.setId(restaurant_id);
-            RestaurantService.UpdateRestaurant(token, restaurantDto);
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("name",restaurantDto.getName());
-            jsonObject.put("address",restaurantDto.getAddress());
-            jsonObject.put("phone",restaurantDto.getPhone());
-            jsonObject.put("logoBase64",restaurantDto.getLogoBase64());
-            jsonObject.put("tax_fee",restaurantDto.getTax_fee());
-            jsonObject.put("additional_fee",restaurantDto.getAdditional_fee());
-            sendResponse(exchange, 200, jsonObject.toString());
+        String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
+        RestaurantDto restaurantDto = gson.fromJson(requestBody, RestaurantDto.class);
+        restaurantDto.setId(restaurant_id);
+        RestaurantService.UpdateRestaurant(token, restaurantDto);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("name",restaurantDto.getName());
+        jsonObject.put("address",restaurantDto.getAddress());
+        jsonObject.put("phone",restaurantDto.getPhone());
+        jsonObject.put("logoBase64",restaurantDto.getLogoBase64());
+        jsonObject.put("tax_fee",restaurantDto.getTax_fee());
+        jsonObject.put("additional_fee",restaurantDto.getAdditional_fee());
+        sendResponse(exchange, 200, jsonObject.toString());
 
     }
 
@@ -179,13 +179,12 @@ public class RestaurantHandler implements HttpHandler {
 
         Gson gson = new Gson();
 
-           String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
-           FoodDto foodDto = gson.fromJson(requestBody, FoodDto.class);
-            String phone = JwtUtil.validateToken(token);
-
-            FoodDto foodDtoOut = RestaurantService.AddFood(phone,foodDto,restaurant_id);
-            String json = gson.toJson(foodDtoOut, FoodDto.class);
-            sendResponse(exchange, 200, json);
+        String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
+        FoodDto foodDto = gson.fromJson(requestBody, FoodDto.class);
+        String phone = JwtUtil.validateToken(token);
+        FoodDto foodDtoOut = RestaurantService.AddFood(phone,foodDto,restaurant_id);
+        String json = gson.toJson(foodDtoOut, FoodDto.class);
+        sendResponse(exchange, 200, json);
     }
 
     private void UpdateFood(HttpExchange exchange,long restaurant_id,long food_id,String token) throws IOException {
@@ -193,56 +192,46 @@ public class RestaurantHandler implements HttpHandler {
         Gson gson = new Gson();
         String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
 
-            FoodDto foodDto = gson.fromJson(requestBody, FoodDto.class);
-            foodDto.id = food_id;
-            foodDto.vendor_id=restaurant_id;
-            String phone = JwtUtil.validateToken(token);
-            if(phone == null){
-                throw new UnauthorizedException("Unauthorized");
-            }
-            foodDto = RestaurantService.UpdateFood(phone,foodDto,restaurant_id);
-            String json = gson.toJson(foodDto, FoodDto.class);
-            sendResponse(exchange, 200, json);
+        FoodDto foodDto = gson.fromJson(requestBody, FoodDto.class);
+        foodDto.id = food_id;
+        foodDto.vendor_id=restaurant_id;
+        String phone = JwtUtil.validateToken(token);
+
+        foodDto = RestaurantService.UpdateFood(phone,foodDto,restaurant_id);
+        String json = gson.toJson(foodDto, FoodDto.class);
+        sendResponse(exchange, 200, json);
 
     }
 
     private void DeleteFood(HttpExchange exchange,long restaurant_id,long food_id,String token) throws IOException {
 
-            String phone = JwtUtil.validateToken(token);
-            if(phone == null){
-                throw new UnauthorizedException("Unauthorized");
-            }
-            RestaurantService.DeleteFood(phone,restaurant_id,food_id);
-            sendResponse(exchange, 200,"{\"message\": \"Food item removed successfully\"}" );
+        String phone = JwtUtil.validateToken(token);
+
+        RestaurantService.DeleteFood(phone,restaurant_id,food_id);
+        sendResponse(exchange, 200,"{\"message\": \"Food item removed successfully\"}" );
 
     }
 
     private void AddMenu(HttpExchange exchange,long restaurant_id,String token) throws IOException {
 
         String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
-            String phone = JwtUtil.validateToken(token);
-            if(phone == null){
-                throw new UnauthorizedException("Unauthorized");
-            }
-            JSONObject json = new JSONObject(requestBody);
-            String title = json.getString("title");
-            RestaurantService.AddMenu(phone,restaurant_id,title);
-            sendResponse(exchange, 200,"{\"title\": \"" + title+ "\"}");
+        String phone = JwtUtil.validateToken(token);
+
+        JSONObject json = new JSONObject(requestBody);
+        String title = json.getString("title");
+        RestaurantService.AddMenu(phone,restaurant_id,title);
+        sendResponse(exchange, 200,"{\"title\": \"" + title+ "\"}");
     }
     private void DeleteMenu(HttpExchange exchange,long restaurant_id,String title,String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
-        if(phone == null){
-            throw new UnauthorizedException("Unauthorized");
-        }
+
         RestaurantService.DeleteMenu(phone,restaurant_id,title);
         sendResponse(exchange, 200,"{\"message\": \"Food menu removed from restaurant successfully\"}" );
     }
 
     private void AddFoodToMenu(HttpExchange exchange,long restaurant_id,String title,String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
-        if(phone == null){
-            throw new UnauthorizedException("Unauthorized");
-        }
+
         String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
         JSONObject jsonObject = new JSONObject(requestBody);
         long foodId = jsonObject.getLong("item_id");
@@ -251,11 +240,33 @@ public class RestaurantHandler implements HttpHandler {
     }
     private void DeleteFoodFromMenu(HttpExchange exchange,long restaurant_id,String title,long food_id,String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
-        if(phone == null){
-            throw new UnauthorizedException("Unauthorized");
-        }
+        System.out.println(888);
+
+        System.out.println(5555);
         RestaurantService.DeleteFoodFromMenu(phone,restaurant_id,food_id,title);
         sendResponse(exchange, 200,"{\"message\": \"Item removed from restaurant menu successfully\"}" );
+    }
+    private void GetListOfOrders(HttpExchange exchange,long restaurant_id,String token) throws IOException {
+        String phone = JwtUtil.validateToken(token);
+
+        String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
+        JSONObject jsonObject = new JSONObject(requestBody);
+        Set<Order> orders =RestaurantService.GetListOfOrder(phone,restaurant_id,jsonObject);
+        JSONArray array = new JSONArray();
+        for(Order order : orders){
+            array.put(OrderService.convertOrderToJson(order));
+        }
+        sendResponse(exchange,200,array.toString());
+    }
+
+    private void ChangeStatusOfOrder(HttpExchange exchange,long order_id,String token) throws IOException {
+        String phone = JwtUtil.validateToken(token);
+
+        String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
+        JSONObject jsonObject = new JSONObject(requestBody);
+        String status = jsonObject.getString("status");
+        RestaurantService.ChangeStatusOfOrder(phone,order_id,status);
+        sendResponse(exchange, 200,"{\"message\": \"" + "Order status changed successfully" + "\"}");
     }
 
 

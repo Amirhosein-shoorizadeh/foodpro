@@ -43,14 +43,12 @@ public class adminHandler implements HttpHandler {
                 if (path.equals("/admin/users")) {
                     handle_UserList(exchange, body);
                 } else if (path.equals("/admin/orders")) {
-
+                    AdminSearchOrder(exchange, body);
                 } else if (path.equals("/admin/coupons")) {
                     handle_CouponList(exchange, body);
                 } else if (path.equals("/admin/coupons/\\d+")) {
                     handle_getcoupons(exchange);
-                }
-                    AdminSearchOrder(exchange, body);
-                }else if(path.equals("/admin/transactions")) {
+                } else if(path.equals("/admin/transactions")) {
                     AdminSearchTransaction(exchange, body);
                 }else {throw new NotFoundException("Not Found Path");}
             } else if (exchange.getRequestMethod().equals("POST")) {
