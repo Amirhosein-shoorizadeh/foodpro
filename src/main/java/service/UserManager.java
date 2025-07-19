@@ -20,19 +20,19 @@ public class UserManager {
         User user;
         switch (dto.role.toLowerCase()) {
             case "buyer":
-                user = new Buyer(hashedPassword, dto.full_name, dto.phone, dto.email, dto.profileImageBase64, dto.bank_info, dto.address);
+                user = new Buyer(hashedPassword, dto.full_name, dto.phone, dto.email, dto.profileImageBase64, dto.bank_info, dto.address,User_Status.Availble);
                 if (dto.address == null) {
                     throw new InvalidUserDataException("Missing required address field.");
                 }
                 break;
             case "seller":
-                user = new Seller(hashedPassword, dto.full_name, dto.phone, dto.email, dto.profileImageBase64, dto.bank_info, dto.address);
+                user = new Seller(hashedPassword, dto.full_name, dto.phone, dto.email, dto.profileImageBase64, dto.bank_info, dto.address,User_Status.notAvailable);
                 if (dto.address == null) {
                     throw new InvalidUserDataException("Missing required address field.");
                 }
                 break;
             case "courier":
-                user = new Courier(hashedPassword, dto.full_name, dto.phone, dto.email, dto.profileImageBase64, dto.bank_info, dto.address);
+                user = new Courier(hashedPassword, dto.full_name, dto.phone, dto.email, dto.profileImageBase64, dto.bank_info, dto.address,User_Status.notAvailable);
                 break;
             default:
                 throw new InvalidUserDataException("Invalid user type: " + dto.role);

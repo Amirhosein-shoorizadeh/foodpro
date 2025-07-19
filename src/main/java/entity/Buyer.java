@@ -14,8 +14,8 @@ public class Buyer extends User {
     public Buyer() {
     }
 
-    public Buyer(String password, String name, String phone, String email, String profileImageBase64, Bankinfo bankinfo, String Address) {
-        super(password, name, phone,email,profileImageBase64,bankinfo,Address);
+    public Buyer(String password, String name, String phone, String email, String profileImageBase64, Bankinfo bankinfo, String Address,User_Status userStatus) {
+        super(password, name, phone,email,profileImageBase64,bankinfo,Address,userStatus);
 
     }
 }

@@ -34,7 +34,7 @@
         <mapping class="entity.Menu"/>
         <mapping class="entity.OrderItemId"/>
         <mapping class="entity.Coupon"/>
-
+        <mapping class="entity.User_Status"/>
 
 
     </session-factory>

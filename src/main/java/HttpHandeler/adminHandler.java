@@ -8,9 +8,7 @@ import dao.CouponDao;
 import dao.UserDao;
 import dto.CouponDto;
 import dto.UserProfileDto;
-import entity.Admin;
-import entity.Bankinfo;
-import entity.Coupon;
+import entity.*;
 import exception.ForbiddenException;
 import exception.InvalidUserDataException;
 import exception.NotFoundException;
@@ -39,7 +37,7 @@ public class adminHandler implements HttpHandler {
                 } else if (path.equals("/admin/coupons")) {
                     handle_CouponList(exchange, body);
                 } else if (path.equals("/admin/coupons/\\d+")) {
-
+                    handle_getcoupons(exchange);
                 }
             } else if (exchange.getRequestMethod().equals("POST")) {
                 if (path.equals("/admin/coupons")) {
@@ -84,10 +82,6 @@ public class adminHandler implements HttpHandler {
         String token = authHeader.substring(7);
         String phone = JwtUtil.validateToken(token);
 
-        if (phone == null) {
-            throw new UnauthorizedException("Unauthorized");
-        }
-
         var user = UserDao.getByPhone(phone);
         if (!(user instanceof Admin)) {
             throw new ForbiddenException("Forbidden");
@@ -114,15 +108,15 @@ public class adminHandler implements HttpHandler {
 
         String token = authHeader.substring(7);
         String phone = JwtUtil.validateToken(token);
-
-        if (phone == null) {
-            throw new UnauthorizedException("Unauthorized");
-        }
-
         var user = UserDao.getByPhone(phone);
         if (!(user instanceof Admin)) {
             throw new ForbiddenException("Forbidden");
         }
+        String path = exchange.getRequestURI().getPath();
+        Long userId = Long.parseLong(path.substring(path.lastIndexOf("/") + 1));
+        User change = UserDao.findById(userId);
+        change.setUser_status(User_Status.Availble);
+        UserDao.update(change);
 
     }
 
@@ -137,9 +131,6 @@ public class adminHandler implements HttpHandler {
 
             String token = authHeader.substring(7);
             String phone = JwtUtil.validateToken(token);
-            if (phone == null) {
-                throw new UnauthorizedException("Unauthorized");
-            }
 
             var user = UserDao.getByPhone(phone);
             if (!(user instanceof Admin)) {
@@ -150,8 +141,8 @@ public class adminHandler implements HttpHandler {
 
             Coupon coupon = dto.toEntity();
 
-//            CouponDao.save(coupon);
-//
+            CouponDao.save(coupon);
+
             sendResponse(exchange, 201, "{\"message\": \"Coupon created successfully\"}");
         } catch (InvalidUserDataException e) {
             sendResponse(exchange, 400, "{\"error\": \"Invalid coupon data: " + e.getMessage() + "\"}");
@@ -165,25 +156,17 @@ public class adminHandler implements HttpHandler {
         Gson gson = new Gson();
         Headers headers = exchange.getRequestHeaders();
         String authHeader = headers.getFirst("Authorization");
-
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             throw new UnauthorizedException("Unauthorized");
         }
-
         String token = authHeader.substring(7);
         String phone = JwtUtil.validateToken(token);
-
-        if (phone == null) {
-            throw new UnauthorizedException("Unauthorized");
-        }
 
         var user = UserDao.getByPhone(phone);
         if (!(user instanceof Admin)) {
             throw new ForbiddenException("Forbidden");
         }
-
         var coupons = CouponDao.getAll();
-
         var dtoList = coupons.stream().map(c ->
                 new CouponDto(
                         c.getId(),
@@ -211,10 +194,6 @@ public class adminHandler implements HttpHandler {
 
         String token = authHeader.substring(7);
         String phone = JwtUtil.validateToken(token);
-
-        if (phone == null) {
-            throw new UnauthorizedException("Unauthorized");
-        }
 
         var user = UserDao.getByPhone(phone);
         if (!(user instanceof Admin)) {
@@ -255,10 +234,6 @@ public class adminHandler implements HttpHandler {
         String token = authHeader.substring(7);
         String phone = JwtUtil.validateToken(token);
 
-        if (phone == null) {
-            throw new UnauthorizedException("Unauthorized");
-        }
-
         var user = UserDao.getByPhone(phone);
         if (!(user instanceof Admin)) {
             throw new ForbiddenException("Forbidden");
@@ -286,9 +261,6 @@ public class adminHandler implements HttpHandler {
         String token = authHeader.substring(7);
         String phone = JwtUtil.validateToken(token);
 
-        if (phone == null) {
-            throw new UnauthorizedException("Unauthorized");
-        }
 
         var user = UserDao.getByPhone(phone);
         if (!(user instanceof Admin)) {

@@ -3,24 +3,24 @@ package entity;
 import jakarta.persistence.*;
 
 
- @Entity
+@Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column( nullable = false)
+    @Column(nullable = false)
     private String password;
 
     @Column(nullable = false)
     private String full_name;
 
 
-    @Column( nullable = false, unique = true)
+    @Column(nullable = false, unique = true)
     private String phone;
 
-    @Column( unique = true)
+    @Column(unique = true)
     private String email;
 
     @Column(nullable = true)
@@ -35,9 +35,10 @@ public abstract class User {
     @OneToOne(mappedBy = "buyer", cascade = CascadeType.ALL)
     private Cart cart;
 
+    @Enumerated(EnumType.STRING)
+    private User_Status user_status;
 
-    public User( String password, String name, String phone, String email, String profileImageBase64, Bankinfo bank_info, String Address) {
-
+    public User(String password, String name, String phone, String email, String profileImageBase64, Bankinfo bank_info, String Address, User_Status user_status) {
         this.password = password;
         this.full_name = name;
         this.phone = phone;
@@ -45,9 +46,11 @@ public abstract class User {
         this.profileImageBase64 = profileImageBase64;
         this.bank_info = bank_info;
         this.Address = Address;
+        this.user_status = user_status;
     }
-    public User(long Id,String password, String name, String phone, String email, String profileImageBase64, Bankinfo bankinfo, String Address){
-        this(password,  name,  phone, email,  profileImageBase64, bankinfo, Address);
+
+    public User(long Id, String password, String name, String phone, String email, String profileImageBase64, Bankinfo bankinfo, String Address, User_Status user_status) {
+        this(password, name, phone, email, profileImageBase64, bankinfo, Address, user_status);
         this.id = Id;
     }
 
@@ -76,12 +79,25 @@ public abstract class User {
         return phone;
     }
 
-    public void setPhone(String phoneNumber) {this.phone = phoneNumber;}
+    public void setPhone(String phoneNumber) {
+        this.phone = phoneNumber;
+    }
 
-    public String getEmail() {return email;}
+    public String getEmail() {
+        return email;
+    }
 
-    public void setEmail(String email) {this.email = email;}
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
+    public User_Status getUser_status() {
+        return user_status;
+    }
+
+    public void setUser_status(User_Status user_status) {
+        this.user_status = user_status;
+    }
 
     public String getFull_name() {
         return full_name;

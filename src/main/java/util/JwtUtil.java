@@ -1,6 +1,7 @@
 package util;
 
 import dao.*;
+import entity.User_Status;
 import exception.UnauthorizedException;
 import entity.Token;
 import io.jsonwebtoken.Jwts;
@@ -28,23 +29,32 @@ public class JwtUtil {
                 .compact();
     }
 
-    public static String validateToken(String token) throws UnauthorizedException {
+    public static String validateToken(String token ) throws UnauthorizedException {
         if (TokenDao.isRevoked(token)) throw new UnauthorizedException("Token is revoked");
         Token tokenEntity = TokenDao.findByToken(token);
         if (tokenEntity == null) {
             throw new UnauthorizedException("Token not found");
+
         }
         try {
             byte[] keyBytes = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
             Key key = new SecretKeySpec(keyBytes, SignatureAlgorithm.HS256.getJcaName());
 
-            return Jwts.parser()
+            String mew = Jwts.parser()
                     .setSigningKey(key)
                     .parseClaimsJws(token)
                     .getBody()
                     .getSubject();
+            if (mew == null) {
+                throw new UnauthorizedException("Invalid token");
+            }
+            if (UserDao.getByPhone(mew).getUser_status().equals(User_Status.Availble)) {
+                return mew;
+            }else  {
+                throw new UnauthorizedException("Invalid token");
+            }
         } catch (Exception e) {
-            throw new UnauthorizedException("Erors in :" + e.getMessage());
+            throw new UnauthorizedException(e.getMessage());
         }
     }
 

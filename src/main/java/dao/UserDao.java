@@ -108,6 +108,14 @@ public class UserDao {
             session.close();
         }
     }
+    public static User findById(long id) {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        try {
+            return session.get(User.class, id);
+        } finally {
+            session.close();
+        }
+    }
 
     public static boolean UserisBuyer (String token) throws UnauthorizedException {
         Token authToken = TokenDao.findByToken(token);

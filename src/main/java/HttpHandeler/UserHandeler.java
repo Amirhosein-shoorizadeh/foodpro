@@ -131,9 +131,6 @@ public class UserHandeler implements HttpHandler {
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String token = authHeader.substring(7);
                 String phone = JwtUtil.validateToken(token);
-                if (phone == null) {
-                    throw new InvalidUserDataException("Invalid user data");
-                }
                 UserProfileDto userProfileDto = UserManager.GetCurrentProfile(phone);
                 String json = gson.toJson(userProfileDto);
                 sendResponse(exchange, 200, json);
@@ -158,9 +155,6 @@ public class UserHandeler implements HttpHandler {
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String token = authHeader.substring(7);
                 String phone = JwtUtil.validateToken(token);
-                if (phone == null) {
-                    throw new UnauthorizedException("Unauthrized");
-                }
                 UserProfileDto userProfileDto = gson.fromJson(body, UserProfileDto.class);
                 if (InvalidInput.checkInput_EditProfile(userProfileDto)) {
                     UserManager.UpdateUserProfile(userProfileDto, phone);
