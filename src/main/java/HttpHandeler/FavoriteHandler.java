@@ -32,23 +32,23 @@ public class FavoriteHandler implements HttpHandler {
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 throw new UnauthorizedException("Unauthorized");
             }
-            String token = authHeader.substring(7); // حذف "Bearer "
+            String token = authHeader.substring(7);
 
             if ("GET".equalsIgnoreCase(method)) {
-                if (path.matches("/favorites/?")) {
+                if (path.matches("/favorites/")) {
                     handle_GetFavoriteList(exchange, token);
                 } else {
                     sendResponse(exchange, 404, "Path not found");
                 }
             } else if ("PUT".equalsIgnoreCase(method)) {
                 if (path.matches("/favorites/\\d+")) {
-                    // اضافه‌کردن به علاقه‌مندی (میتونی بعداً بسازی)
+                    handle_UpdateFavorite( exchange, token);
                 } else {
                     sendResponse(exchange, 404, "Path not found");
                 }
             } else if ("DELETE".equalsIgnoreCase(method)) {
                 if (path.matches("/favorites/\\d+")) {
-                    // حذف از علاقه‌مندی (میتونی بعداً بسازی)
+                    handle_DeleteFavorite(exchange, token);
                 } else {
                     sendResponse(exchange, 404, "Path not found");
                 }

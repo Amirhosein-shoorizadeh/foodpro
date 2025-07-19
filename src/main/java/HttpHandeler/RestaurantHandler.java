@@ -5,7 +5,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import dto.FoodDto;
 import dto.RestaurantDto;
-import entity.Food;
 import entity.Order;
 import entity.Restaurant;
 import exception.*;
@@ -270,5 +269,10 @@ public class RestaurantHandler implements HttpHandler {
     }
 
 
+    public static class RatingHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
 
+        }
+    }
 }

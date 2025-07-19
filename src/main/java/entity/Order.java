@@ -1,12 +1,14 @@
 package entity;
 
 import jakarta.persistence.*;
+
 import java.util.*;
 
 @Entity
 @Table(name = "orders")
 public class Order {
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue
     private long id;
 
     private String deliveryAddress;
@@ -19,10 +21,8 @@ public class Order {
     private Coupon coupon; // nullable
 
 
-
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<OrderItem> orderItems = new ArrayList<>();
-
 
 
     private long rawPrice;
@@ -33,7 +33,7 @@ public class Order {
 
     @ManyToOne
     @JoinColumn(name = "courier_id")
-    private  Courier courier; // nullable
+    private Courier courier; // nullable
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status; // could be validated against enum
@@ -44,9 +44,19 @@ public class Order {
     @JoinColumn(name = "buyer_id")
     private Buyer buyer;
 
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Rating rating;
 
+    public Rating getRating() {
+        return rating;
+    }
 
-    public Order() {}
+    public void setRating(Rating rating) {
+        this.rating = rating;
+    }
+
+    public Order() {
+    }
 
     public long getId() {
         return id;
