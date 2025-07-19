@@ -34,8 +34,7 @@ import java.util.List;
                 handleGetItemById(exchange,token);
             }else if(path.matches("/items")){
                 GetItems(exchange,token);
-            }
-            else {
+            }else {
                 sendResponse(exchange, 404, "Path not found");
             }
         } else {
@@ -83,6 +82,7 @@ import java.util.List;
         String json = gson.toJson(dtos);
         sendResponse(exchange, 200, json);
     }
+
 
     private void sendResponse(HttpExchange exchange, int statusCode, String message) throws IOException {
         byte[] bytes = message.getBytes();

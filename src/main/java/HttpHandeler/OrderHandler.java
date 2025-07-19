@@ -78,9 +78,7 @@ public class OrderHandler implements HttpHandler {
 
     public void GetTransactionHistory(HttpExchange exchange,String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
-        if(phone == null){
-            throw new UnauthorizedException("Unauthorized");
-        }
+
         List<PaymentTransaction> paymentTransactions = OrderService.GetTransactionHistory(phone);
         JSONArray payments = new JSONArray();
         for(PaymentTransaction paymentTransaction : paymentTransactions){
@@ -98,9 +96,7 @@ public class OrderHandler implements HttpHandler {
     public void TopUpWallet(HttpExchange exchange,String token) throws IOException {
 
         String phone = JwtUtil.validateToken(token);
-        if(phone == null){
-            throw new UnauthorizedException("Unauthorized");
-        }
+
         String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
         JSONObject jsonObject = new JSONObject(requestBody);
         long amount = jsonObject.getLong("amount");
@@ -113,9 +109,7 @@ public class OrderHandler implements HttpHandler {
 
     public void MakeOnlinePayment(HttpExchange exchange,String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
-        if(phone == null){
-            throw new UnauthorizedException("Unauthorized");
-        }
+
         String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
         JSONObject jsonObject = new JSONObject(requestBody);
         long Order_id = jsonObject.getLong("order_id");
@@ -133,9 +127,7 @@ public class OrderHandler implements HttpHandler {
 
     private void GetOrderWithId(HttpExchange exchange,String token,long order_id) throws IOException {
         String phone = JwtUtil.validateToken(token);
-        if(phone == null){
-            throw new UnauthorizedException("Unauthorized");
-        }
+
         User user = UserDao.getByPhone(phone);
         if(user != null){
             if(user instanceof Buyer){
@@ -153,9 +145,7 @@ public class OrderHandler implements HttpHandler {
 
     private void SubmitOrder(HttpExchange exchange,String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
-        if(phone == null){
-            throw new UnauthorizedException("Unauthorized");
-        }
+
         String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
         JSONObject jsonObject = new JSONObject(requestBody);
 
@@ -183,9 +173,7 @@ public class OrderHandler implements HttpHandler {
     }
     private void GetOrderHistory(HttpExchange exchange,String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
-        if(phone == null){
-            throw new UnauthorizedException("Unauthorized");
-        }
+
         User user = UserDao.getByPhone(phone);
         if(user != null){
             if(user instanceof Buyer){
