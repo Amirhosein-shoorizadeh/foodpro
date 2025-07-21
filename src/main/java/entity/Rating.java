@@ -1,5 +1,6 @@
 package entity;
 
+import dto.RatingDto;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -25,7 +26,28 @@ public class Rating {
     @JoinColumn(name = "order_id", nullable = false, unique = true)
     private Order order;
 
+    @OneToOne
+    @JoinColumn(name = "buyer_id", nullable = false, unique = true)
+    private Buyer buyer;
 
+    @Column
+    private String userName;
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public Buyer getBuyer() {
+        return buyer;
+    }
+
+    public void setBuyer(Buyer buyer) {
+        this.buyer = buyer;
+    }
 
     public Rating() {
 
@@ -71,12 +93,19 @@ public class Rating {
         this.logobase64 = logobase64;
     }
 
-    public Rating(long order_Id, long id, String comment, long rate, String logobase64) {
+    public Rating(long order_Id, String comment, long rate, String logobase64) {
         Order_Id = order_Id;
-        this.id = id;
         this.comment = comment;
         Rate = rate;
         this.logobase64 = logobase64;
     }
 
+    public Rating(RatingDto rateDto, Buyer buyer) {
+        Order_Id = rateDto.getOrderId();
+        Rate = rateDto.getRate();
+        this.comment = rateDto.getComment();
+        this.logobase64 = rateDto.getLogobase64();
+        this.buyer = buyer;
+        this.userName = buyer.getFull_name();
+    }
 }

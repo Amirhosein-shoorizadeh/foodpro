@@ -103,8 +103,8 @@ public class FavoriteHandler implements HttpHandler {
                 String[] paths = exchange.getRequestURI().getPath().split("/");
                 long id = Long.parseLong(paths[paths.length - 1]);
                 if (buyer.deleteFavoriteRestaurant(id)) {
-                    sendResponse(exchange, 200, "Success");
                     UserDao.update(buyer);
+                    sendResponse(exchange, 200, "Success");
                 }
             } else {
                 throw new ForbiddenException("Only buyers can have favorite restaurants.");

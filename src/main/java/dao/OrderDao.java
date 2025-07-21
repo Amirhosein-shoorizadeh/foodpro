@@ -1,5 +1,7 @@
 package dao;
+
 import entity.*;
+import exception.NotFoundException;
 import org.hibernate.*;
 import org.hibernate.query.Query;
 import util.HibernateUtil;
@@ -9,9 +11,10 @@ import java.util.List;
 import java.util.Set;
 
 public class OrderDao {
-    private OrderDao() {}
+    private OrderDao() {
+    }
 
-    public static void save(Order order,List<OrderItem> orderItems) {
+    public static void save(Order order, List<OrderItem> orderItems) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             Transaction tx = session.beginTransaction();
 
@@ -38,6 +41,7 @@ public class OrderDao {
             tx.commit();
         }
     }
+
     public static void delete(Order order) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             Transaction tx = session.beginTransaction();
@@ -58,9 +62,10 @@ public class OrderDao {
     public static Order getOrderById(Long orderId) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             String sql = "SELECT * FROM orders WHERE id = :orderId";
-            return  (Order) session.createNativeQuery(sql, Order.class).uniqueResult();
+            return (Order) session.createNativeQuery(sql, Order.class).uniqueResult();
         }
     }
+
     public static List<Order> getOrdersByStatus(OrderStatus status) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             String sql = "SELECT * FROM orders WHERE status = :status";
@@ -73,15 +78,15 @@ public class OrderDao {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             StringBuilder jpql = new StringBuilder("""
-            SELECT DISTINCT o FROM Order o
-            JOIN FETCH o.restaurant r
-            JOIN FETCH o.buyer b
-            LEFT JOIN FETCH o.courier c
-            LEFT JOIN FETCH o.orderItems oi
-            LEFT JOIN FETCH oi.food f
-            WHERE o.restaurant.id = :restaurantId
-              AND o.status = :status
-        """);
+                        SELECT DISTINCT o FROM Order o
+                        JOIN FETCH o.restaurant r
+                        JOIN FETCH o.buyer b
+                        LEFT JOIN FETCH o.courier c
+                        LEFT JOIN FETCH o.orderItems oi
+                        LEFT JOIN FETCH oi.food f
+                        WHERE o.restaurant.id = :restaurantId
+                          AND o.status = :status
+                    """);
 
             if (foodKeyword != null && !foodKeyword.isBlank()) {
                 jpql.append(" AND REPLACE(LOWER(f.name), ' ', '') LIKE :foodKw ");
@@ -113,19 +118,18 @@ public class OrderDao {
     }
 
 
-
     public static Set<Order> CourierSearchOrders(Long courierId, String food, String vendor, String buyer) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             StringBuilder jpql = new StringBuilder("""
-           SELECT DISTINCT o FROM Order o
-           JOIN FETCH o.buyer b
-           JOIN FETCH o.restaurant r
-           LEFT JOIN FETCH o.courier c
-           LEFT JOIN FETCH o.orderItems oi
-           LEFT JOIN FETCH oi.food f
-           WHERE o.courier.id = :courierId
-        """);
+                       SELECT DISTINCT o FROM Order o
+                       JOIN FETCH o.buyer b
+                       JOIN FETCH o.restaurant r
+                       LEFT JOIN FETCH o.courier c
+                       LEFT JOIN FETCH o.orderItems oi
+                       LEFT JOIN FETCH oi.food f
+                       WHERE o.courier.id = :courierId
+                    """);
 
             if (food != null && !food.isBlank()) {
                 jpql.append(" AND REPLACE(LOWER(f.name), ' ', '') LIKE :foodKw ");
@@ -161,14 +165,14 @@ public class OrderDao {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             StringBuilder jpql = new StringBuilder("""
-            SELECT DISTINCT o FROM Order o
-            JOIN FETCH o.restaurant r
-            JOIN FETCH o.buyer b
-            LEFT JOIN FETCH o.courier c
-            LEFT JOIN FETCH o.orderItems oi
-            LEFT JOIN FETCH oi.food f
-            WHERE o.status = :status
-        """);
+                        SELECT DISTINCT o FROM Order o
+                        JOIN FETCH o.restaurant r
+                        JOIN FETCH o.buyer b
+                        LEFT JOIN FETCH o.courier c
+                        LEFT JOIN FETCH o.orderItems oi
+                        LEFT JOIN FETCH oi.food f
+                        WHERE o.status = :status
+                    """);
 
             if (restaurantKeyword != null && !restaurantKeyword.isBlank()) {
                 jpql.append(" AND REPLACE(LOWER(r.name), ' ', '') LIKE :restaurantKw ");
@@ -208,13 +212,13 @@ public class OrderDao {
     public static Set<Order> BuyerSearch(String restaurantKeyword, String foodKeyword, long buyerId) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             StringBuilder jpql = new StringBuilder("""
-            SELECT DISTINCT o FROM Order o
-            JOIN FETCH o.restaurant r
-            JOIN FETCH o.buyer b
-            LEFT JOIN FETCH o.orderItems oi
-            LEFT JOIN FETCH oi.food f
-            WHERE b.id = :id
-        """);
+                        SELECT DISTINCT o FROM Order o
+                        JOIN FETCH o.restaurant r
+                        JOIN FETCH o.buyer b
+                        LEFT JOIN FETCH o.orderItems oi
+                        LEFT JOIN FETCH oi.food f
+                        WHERE b.id = :id
+                    """);
 
             if (restaurantKeyword != null && !restaurantKeyword.isBlank()) {
                 jpql.append(" AND REPLACE(LOWER(r.name), ' ', '') LIKE :restaurantKw ");
@@ -238,6 +242,16 @@ public class OrderDao {
         }
     }
 
+    public static boolean isThatForThisOne(User user, Long orderId) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            Order order = session.get(Order.class, orderId);
+            if (order == null) {
+                throw new NotFoundException("Order not found");
+            }
+            boolean a = order.getBuyer().getId() == (user.getId());
+            return a;
+        }
+    }
 
 
 }
