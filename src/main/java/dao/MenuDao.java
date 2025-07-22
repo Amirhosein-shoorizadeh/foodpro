@@ -24,8 +24,16 @@ public class MenuDao {
     public static void delete(Menu menu) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             Transaction tx = session.beginTransaction();
-            session.delete(menu);
-            tx.commit();
+            try {
+                System.out.println("Deleting menu with ID: " + menu.getId());
+                session.delete(menu);
+                tx.commit();
+                System.out.println("Menu deleted.");
+            } catch (Exception e) {
+                tx.rollback();
+                System.err.println("Error during delete: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
     }
 

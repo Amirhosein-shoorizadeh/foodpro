@@ -1,5 +1,6 @@
 package dao;
 import entity.*;
+import exception.NotFoundException;
 import org.hibernate.*;
 import org.hibernate.query.Query;
 import util.HibernateUtil;
@@ -38,11 +39,44 @@ public class OrderDao {
             tx.commit();
         }
     }
-    public static void delete(Order order) {
+    public static void delete(long restaurantId,String title) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             Transaction tx = session.beginTransaction();
-            session.delete(order);
-            tx.commit();
+            try {
+                // گرفتن منو در session جاری
+                Menu menu = session.createQuery("""
+                FROM Menu m
+                JOIN FETCH m.restaurant r
+                LEFT JOIN FETCH m.foods f
+                WHERE r.id = :rid AND m.title = :title
+            """, Menu.class)
+                        .setParameter("rid", restaurantId)
+                        .setParameter("title", title)
+                        .uniqueResult();
+
+                if (menu == null) throw new NotFoundException("Menu not found");
+
+                // حذف رابطه ManyToMany بین غذاها و منو
+                for (Food food : new HashSet<>(menu.getFoods())) {
+                    food.getMenus().remove(menu);
+                    session.update(food);
+                }
+                menu.getFoods().clear();
+
+                // حذف منو از لیست رستوران
+                menu.getRestaurant().getMenus().remove(menu);
+                session.update(menu.getRestaurant());
+
+                // حذف منو
+                session.delete(menu);
+
+                tx.commit();
+                System.out.println("Menu deleted successfully.");
+            } catch (Exception e) {
+                tx.rollback();
+                System.err.println("Error deleting menu: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
     }
 
@@ -68,7 +102,7 @@ public class OrderDao {
         }
     }
 
-    public static Set<Order> RestaurantSearchOrders(Long restaurantId, OrderStatus status,
+    public static Set<Order> RestaurantSearchOrders(Long restaurantId, String status,
                                                     String foodKeyword, String buyerKeyword, String courierKeyword) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -79,10 +113,15 @@ public class OrderDao {
             LEFT JOIN FETCH o.courier c
             LEFT JOIN FETCH o.orderItems oi
             LEFT JOIN FETCH oi.food f
-            WHERE o.restaurant.id = :restaurantId
-              AND o.status = :status
+            WHERE 1=1
         """);
 
+            if (restaurantId != null && restaurantId > 0) {
+                jpql.append(" AND o.restaurant.id = :restaurantId ");
+            }
+            if (status != null) {
+                jpql.append(" AND o.status = :status ");
+            }
             if (foodKeyword != null && !foodKeyword.isBlank()) {
                 jpql.append(" AND REPLACE(LOWER(f.name), ' ', '') LIKE :foodKw ");
             }
@@ -93,10 +132,14 @@ public class OrderDao {
                 jpql.append(" AND REPLACE(LOWER(c.full_name), ' ', '') LIKE :courierKw ");
             }
 
-            Query<Order> query = session.createQuery(jpql.toString(), Order.class)
-                    .setParameter("restaurantId", restaurantId)
-                    .setParameter("status", status);
+            Query<Order> query = session.createQuery(jpql.toString(), Order.class);
 
+            if (restaurantId != null && restaurantId > 0) {
+                query.setParameter("restaurantId", restaurantId);
+            }
+            if (status != null) {
+                query.setParameter("status", status);
+            }
             if (foodKeyword != null && !foodKeyword.isBlank()) {
                 query.setParameter("foodKw", "%" + foodKeyword.toLowerCase().replace(" ", "") + "%");
             }
@@ -107,10 +150,10 @@ public class OrderDao {
                 query.setParameter("courierKw", "%" + courierKeyword.toLowerCase().replace(" ", "") + "%");
             }
 
-            List<Order> resultList = query.getResultList();
-            return new HashSet<>(resultList);
+            return new HashSet<>(query.getResultList());
         }
     }
+
 
 
 

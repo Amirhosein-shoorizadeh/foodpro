@@ -28,7 +28,7 @@ public class Food {
 
 
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "keywords", joinColumns = @JoinColumn(name = "food_id"))
     @Column(name = "keywords")
     private List<String> keywords = new ArrayList<>();
@@ -43,8 +43,7 @@ public class Food {
     private Set<Menu> menus = new HashSet<>();
 
 
-    @ManyToMany(mappedBy = "foods",cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    private Set<Order> orders = new HashSet<>();
+
 
 
 
@@ -136,13 +135,7 @@ public class Food {
     public void setMenus(Set<Menu> menus) {
         this.menus = menus;
     }
-    public Set<Order> getOrders() {
-        return orders;
-    }
 
-    public void setOrders(Set<Order> orders) {
-        this.orders = orders;
-    }
     public void MinusSupply(int number) {
         this.supply -= number;
     }

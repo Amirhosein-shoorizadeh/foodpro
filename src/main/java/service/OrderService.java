@@ -25,8 +25,8 @@ public class OrderService {
         JSONObject obj = new JSONObject();
         obj.put("id", order.getId());
         obj.put("delivery_address", order.getDeliveryAddress());
-        obj.put("customer_id", order.getBuyer().getId());
-        obj.put("vendor_id", order.getRestaurant().getId());
+        obj.put("customerName", order.getBuyer().getFull_name());
+        obj.put("vendorName", order.getRestaurant().getName());
         obj.put("coupon_id", order.getCoupon() == null ? JSONObject.NULL : order.getCoupon().getId());
 
         JSONArray itemsArray = new JSONArray();
@@ -44,7 +44,7 @@ public class OrderService {
         obj.put("additional_fee", order.getAdditionalFee());
         obj.put("courier_fee", order.getCourierFee());
         obj.put("pay_price", order.getPayPrice());
-        obj.put("courier_id", order.getCourier() == null ? JSONObject.NULL : order.getCourier().getId());
+        obj.put("courierName", order.getCourier() == null ? JSONObject.NULL : order.getCourier().getFull_name());
         obj.put("status", order.getStatus().name());
         obj.put("created_at", order.getCreatedAt());
         obj.put("updated_at", order.getUpdatedAt());
