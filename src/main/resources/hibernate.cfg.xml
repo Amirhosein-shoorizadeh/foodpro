@@ -36,7 +36,7 @@
         <mapping class="entity.Coupon"/>
         <mapping class="entity.User_Status"/>
         <mapping class="entity.PaymentTransaction"/>
-
+        <mapping class="entity.Rating"/>
 
 
 
