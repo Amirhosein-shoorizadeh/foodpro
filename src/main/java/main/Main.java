@@ -41,7 +41,10 @@ public class Main {
             server.createContext("/transactions",new OrderHandler());
             server.createContext("/wallet",new OrderHandler());
             server.createContext("/payment",new OrderHandler());
-            server.createContext("/orders",new OrderHandler());
+           server.createContext("/ratings",new RatingHandler());
+            server.createContext("/favorites",new FavoriteHandler());
+            
+
             server.start();
         } catch (IOException e) {
             System.out.println("Error: " + e.getMessage());

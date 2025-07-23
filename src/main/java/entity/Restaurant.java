@@ -31,8 +31,7 @@ public class Restaurant {
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Order> orders = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "favoriteRestaurants")
-    private List<User> likedByUsers = new ArrayList<>();
+
 
     @Column(nullable = false)
     private String name;
@@ -55,6 +54,8 @@ public class Restaurant {
     @Enumerated(EnumType.STRING)
     ApprovalStatus approval_status = ApprovalStatus.pending;
 
+    @ManyToMany(mappedBy = "favoriteRestaurants")
+    private List<Buyer> likedByBuyers = new ArrayList<>();
 
     public Restaurant() {
     }

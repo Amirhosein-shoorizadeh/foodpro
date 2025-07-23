@@ -36,28 +36,34 @@ public class adminHandler implements HttpHandler {
     public void handle(HttpExchange exchange) throws IOException {
         try {
 
+            String method = exchange.getRequestMethod();
             String path = exchange.getRequestURI().getPath();
-            String body = new BufferedReader(new InputStreamReader(exchange.getRequestBody())).lines().collect(Collectors.joining());
+            String authHeader = exchange.getRequestHeaders().getFirst("Authorization");
+
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                throw new UnauthorizedException("Unauthorized");
+            }
+            String token = authHeader.substring(7);
 
             if (exchange.getRequestMethod().equals("GET")) {
                 if (path.equals("/admin/users")) {
-                    handle_UserList(exchange, body);
+                    handle_UserList(exchange,token );
                 } else if (path.equals("/admin/orders")) {
-                    AdminSearchOrder(exchange, body);
+                    AdminSearchOrder(exchange, token);
                 } else if (path.equals("/admin/coupons")) {
-                    handle_CouponList(exchange, body);
+                    handle_CouponList(exchange, token);
                 } else if (path.equals("/admin/coupons/\\d+")) {
                     handle_getcoupons(exchange);
                 } else if(path.equals("/admin/transactions")) {
-                    AdminSearchTransaction(exchange, body);
+                    AdminSearchTransaction(exchange, token);
                 }else {throw new NotFoundException("Not Found Path");}
             } else if (exchange.getRequestMethod().equals("POST")) {
                 if (path.equals("/admin/coupons")) {
-                    handle_CreateCoupon(exchange, body);
+                    handle_CreateCoupon(exchange, token);
                 }
             } else if (exchange.getRequestMethod().equals("PATCH")) {
                 if (path.equals("/admin/users/\\d+/status")) {
-                    handle_UserApproval(exchange, body);
+                    handle_UserApproval(exchange, token);
                 }
             } else if (exchange.getRequestMethod().equals("DELETE")) {
                 if (path.equals("/admin/coupons/\\d+")) {
@@ -65,7 +71,7 @@ public class adminHandler implements HttpHandler {
                 }
             } else if (exchange.getRequestMethod().equals("PUT")) {
                 if (path.matches("/admin/coupons/\\d+")) {
-                    handle_UpdateCoupon(exchange, body);
+                    handle_UpdateCoupon(exchange, token);
                 }
             } else if (exchange.getRequestMethod().equals("HEAD")) {
             } else {
