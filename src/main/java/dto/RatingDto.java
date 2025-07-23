@@ -1,5 +1,7 @@
 package dto;
 
+import java.util.List;
+
 public class RatingDto {
 
     private long orderId;
@@ -8,7 +10,7 @@ public class RatingDto {
 
     private String comment;
 
-    private String logobase64;
+    private List<String> logobase64; // تغییر از String به List<String>
 
     private String userName;
 
@@ -20,11 +22,11 @@ public class RatingDto {
         this.userName = userName;
     }
 
-    public String getLogobase64() {
+    public List<String> getLogobase64() { // به‌روز کردن گتر
         return logobase64;
     }
 
-    public void setLogobase64(String logobase64) {
+    public void setLogobase64(List<String> logobase64) { // به‌روز کردن ستر
         this.logobase64 = logobase64;
     }
 
