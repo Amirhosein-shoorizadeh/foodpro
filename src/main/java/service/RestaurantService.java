@@ -193,7 +193,7 @@ public class RestaurantService {
     }
     public static void DeleteMenu(String sellerPhone, long restaurantId, String title) {
         if (!canModifyRestaurant(sellerPhone, restaurantId)) return;
-          OrderDao.delete(restaurantId,title);
+         MenuDao.delete(restaurantId, title);
     }
 
 

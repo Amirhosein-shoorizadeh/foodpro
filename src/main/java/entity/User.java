@@ -2,6 +2,9 @@ package entity;
 
 import jakarta.persistence.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
@@ -37,6 +40,10 @@ public abstract class User {
 
     @Enumerated(EnumType.STRING)
     private User_Status user_status;
+
+
+
+
 
     public User(String password, String name, String phone, String email, String profileImageBase64, Bankinfo bank_info, String Address, User_Status user_status) {
         this.password = password;
@@ -138,5 +145,15 @@ public abstract class User {
     public void setCart(Cart cart) {
         this.cart = cart;
     }
+
+    public Bankinfo getBank_info() {
+        return bank_info;
+    }
+
+    public void setBank_info(Bankinfo bank_info) {
+        this.bank_info = bank_info;
+    }
+
+
 }
 

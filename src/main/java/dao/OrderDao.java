@@ -39,44 +39,11 @@ public class OrderDao {
             tx.commit();
         }
     }
-    public static void delete(long restaurantId,String title) {
+    public static void delete(Order order) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             Transaction tx = session.beginTransaction();
-            try {
-                // گرفتن منو در session جاری
-                Menu menu = session.createQuery("""
-                FROM Menu m
-                JOIN FETCH m.restaurant r
-                LEFT JOIN FETCH m.foods f
-                WHERE r.id = :rid AND m.title = :title
-            """, Menu.class)
-                        .setParameter("rid", restaurantId)
-                        .setParameter("title", title)
-                        .uniqueResult();
-
-                if (menu == null) throw new NotFoundException("Menu not found");
-
-                // حذف رابطه ManyToMany بین غذاها و منو
-                for (Food food : new HashSet<>(menu.getFoods())) {
-                    food.getMenus().remove(menu);
-                    session.update(food);
-                }
-                menu.getFoods().clear();
-
-                // حذف منو از لیست رستوران
-                menu.getRestaurant().getMenus().remove(menu);
-                session.update(menu.getRestaurant());
-
-                // حذف منو
-                session.delete(menu);
-
-                tx.commit();
-                System.out.println("Menu deleted successfully.");
-            } catch (Exception e) {
-                tx.rollback();
-                System.err.println("Error deleting menu: " + e.getMessage());
-                e.printStackTrace();
-            }
+            session.delete(order);
+            tx.commit();
         }
     }
 
@@ -278,6 +245,17 @@ public class OrderDao {
 
             List<Order> resultList = query.getResultList();
             return new HashSet<>(resultList);
+        }
+    }
+
+    public static boolean isThatForThisOne(User user, Long orderId) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            Order order = session.get(Order.class, orderId);
+            if (order == null) {
+                throw new NotFoundException("Order not found");
+            }
+            boolean a = order.getBuyer().getId() == (user.getId());
+            return a;
         }
     }
 

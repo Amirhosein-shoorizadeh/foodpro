@@ -48,11 +48,7 @@ public class JwtUtil {
             if (mew == null) {
                 throw new UnauthorizedException("Invalid token");
             }
-            if (UserDao.getByPhone(mew).getUser_status().equals(User_Status.Availble)) {
-                return mew;
-            }else  {
-                throw new UnauthorizedException("Invalid token");
-            }
+            return mew;
         } catch (Exception e) {
             throw new UnauthorizedException(e.getMessage());
         }

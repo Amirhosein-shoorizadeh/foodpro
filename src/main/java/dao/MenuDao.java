@@ -1,10 +1,14 @@
 package dao;
 
+import entity.Food;
 import entity.Menu;
+import exception.NotFoundException;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import util.HibernateUtil;
+
+import java.util.HashSet;
 
 public class MenuDao {
     public static void save(Menu menu) {
@@ -21,17 +25,42 @@ public class MenuDao {
             tx.commit();
         }
     }
-    public static void delete(Menu menu) {
+    public static void delete(long restaurantId,String title) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             Transaction tx = session.beginTransaction();
             try {
-                System.out.println("Deleting menu with ID: " + menu.getId());
+                // گرفتن منو در session جاری
+                Menu menu = session.createQuery("""
+                FROM Menu m
+                JOIN FETCH m.restaurant r
+                LEFT JOIN FETCH m.foods f
+                WHERE r.id = :rid AND m.title = :title
+            """, Menu.class)
+                        .setParameter("rid", restaurantId)
+                        .setParameter("title", title)
+                        .uniqueResult();
+
+                if (menu == null) throw new NotFoundException("Menu not found");
+
+                // حذف رابطه ManyToMany بین غذاها و منو
+                for (Food food : new HashSet<>(menu.getFoods())) {
+                    food.getMenus().remove(menu);
+                    session.update(food);
+                }
+                menu.getFoods().clear();
+
+                // حذف منو از لیست رستوران
+                menu.getRestaurant().getMenus().remove(menu);
+                session.update(menu.getRestaurant());
+
+                // حذف منو
                 session.delete(menu);
+
                 tx.commit();
-                System.out.println("Menu deleted.");
+                System.out.println("Menu deleted successfully.");
             } catch (Exception e) {
                 tx.rollback();
-                System.err.println("Error during delete: " + e.getMessage());
+                System.err.println("Error deleting menu: " + e.getMessage());
                 e.printStackTrace();
             }
         }

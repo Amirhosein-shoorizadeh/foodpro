@@ -28,11 +28,11 @@ public class Restaurant {
     @JoinColumn(name = "seller_id", nullable = false)
     private Seller seller;
 
-    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL)
     private List<Order> orders = new ArrayList<>();
 
     @ManyToMany(mappedBy = "favoriteRestaurants")
-    private List<User> likedByUsers = new ArrayList<>();
+    private List<Buyer> likedByUsers = new ArrayList<>();
 
     @Column(nullable = false)
     private String name;

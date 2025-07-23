@@ -47,6 +47,8 @@ public class Food {
 
 
 
+
+
     public Food() {}
 
    public Food(String name, String imageBase64, String description, long price, int supply, List<String> keywords) {
@@ -142,6 +144,9 @@ public class Food {
     public void PlusSupply(int number) {
         this.supply += number;
     }
+
+
+
 
     @Override
     public boolean equals(Object o) {

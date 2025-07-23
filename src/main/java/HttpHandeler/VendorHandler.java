@@ -70,6 +70,7 @@ public class VendorHandler implements HttpHandler {
         if (phone == null) {
             throw new UnauthorizedException("Unauthorized");
         }
+
         JSONObject obj = new JSONObject(body);
         String Search = obj.optString("search",null);
         JSONArray jsonArray = obj.optJSONArray("keywords");
@@ -79,6 +80,7 @@ public class VendorHandler implements HttpHandler {
                 KeyWords.add(jsonArray.optString(i).toLowerCase());
             }
         }
+
         User user = UserDao.getByPhone(phone);
         if (user != null) {
             if(user instanceof Buyer){
