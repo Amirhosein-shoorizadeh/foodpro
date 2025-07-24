@@ -15,6 +15,7 @@ import exception.ForbiddenException;
 import exception.NotFoundException;
 import exception.UnauthorizedException;
 import org.hibernate.query.sqm.mutation.internal.Handler;
+import org.json.JSONObject;
 import util.JwtUtil;
 
 import java.io.IOException;
@@ -133,8 +134,15 @@ public class RatingHandler implements HttpHandler {
                 if ((user instanceof Buyer || user instanceof Seller)) {
                     String[] paths = exchange.getRequestURI().getPath().split("/");
                     long orderId = Long.parseLong(paths[paths.length - 1]);
-
+                     double avg_rating =0;
                     List<Rating> ratings = RatingDao.findByItem(orderId);
+                    if (!ratings.isEmpty()) {
+                        for (Rating rating : ratings) {
+                            avg_rating += rating.getRate();
+                        }
+                        avg_rating /= ratings.size();
+                    }
+
 
                     List<RatingDto> dtoList = ratings.stream()
                             .map(rating -> {
@@ -147,8 +155,11 @@ public class RatingHandler implements HttpHandler {
                                 return dto;
                             })
                             .collect(Collectors.toList());
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put("comments", dtoList);
+                    jsonObject.put("avg_rating", avg_rating);
 
-                    String json = gson.toJson(dtoList);
+                    String json = jsonObject.toString();
                     exchange.getResponseHeaders().set("Content-Type", "application/json");
                     sendResponse(exchange, 200, json);
                 } else {

@@ -35,6 +35,7 @@ public class OrderService {
             itemObj.put("food_id", item.getFood().getId());
             itemObj.put("food_name", item.getFood().getName());
             itemObj.put("quantity", item.getQuantity());
+            itemObj.put("logoBase64",item.getFood().getImageBase64());
             itemsArray.put(itemObj);
         }
         obj.put("items", itemsArray);

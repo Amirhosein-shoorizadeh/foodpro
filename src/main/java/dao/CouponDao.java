@@ -90,16 +90,14 @@ public class CouponDao {
         }
     }
 
-    public static Coupon getByCode(Long code) {
-        Session session = HibernateUtil.getSessionFactory().openSession();
-        try {
-            return session.createQuery("FROM Coupon WHERE couponCode = :code", Coupon.class)
+    public static Coupon getByCode(String code) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            return session.createQuery("FROM Coupon c WHERE c.couponCode = :code", Coupon.class)
                     .setParameter("code", code)
                     .uniqueResult();
-        } finally {
-            session.close();
         }
     }
+
 
     public static List<Coupon> getAll() {
         Session session = HibernateUtil.getSessionFactory().openSession();

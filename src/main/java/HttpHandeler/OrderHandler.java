@@ -2,10 +2,7 @@ package HttpHandeler;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import dao.OrderDao;
-import dao.PaymentTransactionDao;
-import dao.RestaurantDao;
-import dao.UserDao;
+import dao.*;
 import entity.*;
 import exception.*;
 import org.json.JSONArray;
@@ -15,6 +12,7 @@ import util.JwtUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -27,6 +25,8 @@ public class OrderHandler implements HttpHandler {
             String method = exchange.getRequestMethod();
             String path = exchange.getRequestURI().getPath();
             String authHeader = exchange.getRequestHeaders().getFirst("Authorization");
+
+
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 throw new UnauthorizedException("Unauthorized");
             }
@@ -40,6 +40,8 @@ public class OrderHandler implements HttpHandler {
                     GetOrderWithId(exchange,token,order_id);
                 }else if(path.equals("/orders/history")) {
                     GetOrderHistory(exchange,token);
+                }else if(path.equals("/carts")) {
+                    GetCartsOfBuyer(exchange,token);
                 }
                 else{throw new NotFoundException("Not Found PATH");}
             }
@@ -50,6 +52,13 @@ public class OrderHandler implements HttpHandler {
                     MakeOnlinePayment(exchange,token);
                 }else if(path.equals("/orders")) {
                     SubmitOrder(exchange,token);
+                }else if(path.matches("/orders/\\d+") && path.split("/")[1].equals("orders")) {
+                    String[] pathParts = path.split("/");
+                    long restaurant_id = Long.parseLong(pathParts[2]);
+                    System.out.println(33);;
+                    AddFoodToCart(exchange,restaurant_id,token);
+                }else if(path.equals("/coupons")) {
+                    CheckCoupon(exchange,token);
                 }
                 else {throw new NotFoundException("Not Found PATH");}
             }else {throw new NotFoundException("Not Found Method");}
@@ -188,6 +197,104 @@ public class OrderHandler implements HttpHandler {
                     jsonArray.put(OrderService.convertOrderToJson(order));
                 }
                 sendResponse(exchange, 200, jsonArray.toString());
+            }else throw  new ForbiddenException("Forbidden");
+        }else throw new NotFoundException("Not Found User");
+    }
+    private void AddFoodToCart(HttpExchange exchange,long restaurant_id,String token) throws IOException {
+        String phone = JwtUtil.validateToken(token);
+        User user = UserDao.getByPhone(phone);
+
+        if(user != null){
+            if(user instanceof Buyer){
+
+                Buyer buyer = (Buyer)user;
+                String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
+                JSONObject jsonObject = new JSONObject(requestBody);
+                long food_id = jsonObject.getLong("food_id");
+                int quantity = jsonObject.getInt("quantity");
+                Food food = FoodDao.getFoodById(food_id);
+
+                Restaurant restaurant = RestaurantDao.getById(restaurant_id);
+                if(food != null){
+                    if(food.getRestaurant().getId() == restaurant_id){
+                        if(food.getSupply() >= quantity){
+                            Order cart = OrderDao.getCartBuyer(buyer.getId(),restaurant_id);
+                            System.out.println(cart);
+                            if(cart != null){
+                                 cart.addOrderItems(new OrderItem(cart,food,quantity));
+                                 cart.addRawPrice(food.getPrice()*quantity);
+                                 cart.calculatePayPrice();
+                                 OrderDao.update(cart);
+                                 food.MinusSupply(quantity);
+                                 FoodDao.update(food);
+                            }else{
+                                cart = new Order();
+                                cart.addOrderItems(new OrderItem(cart,food,quantity));
+                                cart.setRestaurant(restaurant);
+                                cart.setTaxFee(restaurant.getTax_fee());
+                                cart.setAdditionalFee(restaurant.getAdditional_fee());
+                                cart.addRawPrice(food.getPrice()*quantity);
+                                cart.calculatePayPrice();
+                                cart.setBuyer(buyer);
+                                cart.setStatus(OrderStatus.NON_SUBMITTED);
+                                OrderDao.save(cart);
+                                food.MinusSupply(quantity);
+                                FoodDao.update(food);
+                            }
+                            sendResponse(exchange, 200, "OK");
+                        }else throw new ForbiddenException("Forbidden");
+                    }else throw new ForbiddenException("Forbidden");
+                }else throw new NotFoundException("Not Found Food");
+            }
+        } else throw new NotFoundException("Not Found User");
+    }
+
+    private void GetCartsOfBuyer(HttpExchange exchange,String token) throws IOException {
+        String phone = JwtUtil.validateToken(token);
+        User user = UserDao.getByPhone(phone);
+        if(user != null){
+            if(user instanceof Buyer){
+                Buyer buyer = (Buyer)user;
+                List<Order> orders = OrderDao.getCartsOfBuyer(buyer.getId());
+                JSONArray jsonArray = new JSONArray();
+                for(Order order : orders){
+                    jsonArray.put(OrderService.convertOrderToJson(order));
+                }
+                sendResponse(exchange, 200, jsonArray.toString());
+            }else throw  new ForbiddenException("Forbidden");
+        }else throw new NotFoundException("Not Found User");
+    }
+
+    private void CheckCoupon(HttpExchange exchange,String token) throws IOException {
+        String phone = JwtUtil.validateToken(token);
+        User user = UserDao.getByPhone(phone);
+        if(user != null){
+            if(user instanceof Buyer){
+                String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
+                JSONObject jsonObject = new JSONObject(requestBody);
+                String coupon_code = jsonObject.optString("coupon_code",null);
+                long order_id = jsonObject.getLong("order_id");
+                Coupon coupon = CouponDao.getByCode(coupon_code);
+                Order order = OrderDao.getOrderById(order_id);
+                if(coupon != null){
+                    if(order != null){
+                        if(order.getPayPrice() > coupon.getMinPrice() && coupon.getUserCount()>0){
+                            LocalDate nowDate = LocalDate.now();
+                            if((nowDate.isAfter(coupon.getStartDate()) && nowDate.isBefore(coupon.getEndDate())) || (nowDate.isEqual(coupon.getStartDate()) || nowDate.isEqual(coupon.getEndDate())) ){
+                                order.setCoupon(coupon);
+                                order.calculatePayPrice();
+                                coupon.MinusUserCount();
+                                OrderDao.update(order);
+                                CouponDao.update(coupon);
+                                JSONObject response = new JSONObject();
+                                response.put("PayPrice",order.getPayPrice());
+                                response.put("coupon_id",coupon.getId());
+                                sendResponse(exchange, 200, response.toString());
+
+                            }else  throw new ForbiddenException("Forbidden");
+                        }else throw  new ForbiddenException("Forbidden");
+                    }else throw new NotFoundException("Not Found Coupon");
+                }else throw new NotFoundException("Not Found Order");
             }else throw  new ForbiddenException("Forbidden");
         }else throw new NotFoundException("Not Found User");
     }

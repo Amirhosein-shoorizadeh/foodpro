@@ -12,18 +12,12 @@ import java.util.Set;
 public class OrderDao {
     private OrderDao() {}
 
-    public static void save(Order order,List<OrderItem> orderItems) {
+    public static void save(Order order) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             Transaction tx = session.beginTransaction();
 
             session.persist(order); // یا session.save(order)
 
-            for (OrderItem item : orderItems) {
-                item.setOrder(order);
-                session.persist(item);
-            }
-
-            session.update(order); // اگر لازم است، مثلا برای مقدار نهایی پرداخت یا coupon
 
             tx.commit();
         } catch (Exception e) {
@@ -256,6 +250,35 @@ public class OrderDao {
             }
             boolean a = order.getBuyer().getId() == (user.getId());
             return a;
+        }
+    }
+
+    public static Order getCartBuyer(long buyer_id , long restaurantId) {
+
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            String hql = "FROM Order o WHERE o.buyer.id = :buyerId AND o.restaurant.id = :restaurantId AND o.status = :status";
+            return session.createQuery(hql, Order.class)
+                    .setParameter("buyerId", buyer_id)
+                    .setParameter("restaurantId", restaurantId)
+                    .setParameter("status", OrderStatus.NON_SUBMITTED)
+                    .setMaxResults(1)
+                    .uniqueResult();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static List<Order> getCartsOfBuyer(long buyerId) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            String hql = "FROM Order o WHERE o.buyer.id = :buyerId AND o.status = :status";
+            return session.createQuery(hql, Order.class)
+                    .setParameter("buyerId", buyerId)
+                    .setParameter("status", OrderStatus.NON_SUBMITTED)
+                    .getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
     }
 

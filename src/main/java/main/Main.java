@@ -43,6 +43,9 @@ public class Main {
             server.createContext("/payment",new OrderHandler());
            server.createContext("/ratings",new RatingHandler());
             server.createContext("/favorites",new FavoriteHandler());
+            server.createContext("/orders",new OrderHandler());
+            server.createContext("/carts",new OrderHandler());
+            server.createContext("/coupons",new OrderHandler());
             
 
             server.start();

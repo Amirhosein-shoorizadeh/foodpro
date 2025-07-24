@@ -1,5 +1,7 @@
 package entity;
 
+import dao.CouponDao;
+import exception.NotFoundException;
 import jakarta.persistence.*;
 
 import java.util.*;
@@ -176,6 +178,26 @@ public class Order {
 
     public void setOrderItems(List<OrderItem> orderItems) {
         this.orderItems = orderItems;
+    }
+
+
+    public void addOrderItems(OrderItem orderItem){
+        this.orderItems.add(orderItem);
+    }
+    public void addRawPrice(long amount){
+        rawPrice += amount;
+    }
+
+    public void calculatePayPrice(){
+        payPrice = rawPrice + (rawPrice * restaurant.getTax_fee() / 100.0)
+                + restaurant.getAdditional_fee() + courierFee;
+        if (coupon != null) {
+            if (coupon.getType() == Coupon.Type.fixed) {
+                payPrice -= coupon.getValue();
+            } else if (coupon.getType() == Coupon.Type.percent) {
+                payPrice -= payPrice * (coupon.getValue() / 100.0);
+            }
+        }
     }
 
     @Override

@@ -110,6 +110,9 @@ public class Coupon {
 
     public void setId(Long couponId) {
     }
+    public void MinusUserCount(){
+        this.userCount--;
+    }
 
     public  static enum Type {
         fixed,

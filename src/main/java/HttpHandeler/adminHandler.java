@@ -288,7 +288,7 @@ public class adminHandler implements HttpHandler {
         String path = exchange.getRequestURI().getPath();
         Long couponId = Long.parseLong(path.substring(path.lastIndexOf("/") + 1));
 
-        Coupon coupon = CouponDao.getByCode(couponId);
+        Coupon coupon = CouponDao.findByCouponId(couponId);
         if (coupon == null) {
             throw new NotFoundException("Coupon not found");
         }
