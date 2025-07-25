@@ -129,6 +129,16 @@ public class UserDao {
             throw new UnauthorizedException("No data Acess" );
         }
     }
+    public static void deleteUser(long id) {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        try {
+            session.beginTransaction();
+            session.delete(findById(id));
+            session.getTransaction().commit();
+        }finally {
+            session.close();
+        }
+    }
 
 }
 
