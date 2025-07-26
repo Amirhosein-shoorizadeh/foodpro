@@ -3,6 +3,7 @@ package dao;
 import entity.Buyer;
 import entity.Token;
 import entity.User;
+import entity.User_Status;
 import exception.UnauthorizedException;
 import org.hibernate.Session;
 import org.mindrot.jbcrypt.BCrypt;
@@ -93,11 +94,13 @@ public class UserDao {
 
         }
     }
-    public static List<User> getAllExceptAdmins() {
+    public static List<User> getAllNotApprovedExceptAdmins() {
         Session session = HibernateUtil.getSessionFactory().openSession();
         try {
             session.beginTransaction();
-            List<User> users = session.createQuery("FROM User u WHERE TYPE(u) <> Admin", User.class)
+            List<User> users = session.createQuery(
+                            "FROM User u WHERE TYPE(u) <> Admin AND u.user_status = :status", User.class)
+                    .setParameter("status", User_Status.notAvailable)
                     .getResultList();
             session.getTransaction().commit();
             return users;
@@ -108,6 +111,7 @@ public class UserDao {
             session.close();
         }
     }
+
     public static User findById(long id) {
         Session session = HibernateUtil.getSessionFactory().openSession();
         try {
@@ -129,6 +133,7 @@ public class UserDao {
             throw new UnauthorizedException("No data Acess" );
         }
     }
+
     public static void deleteUser(long id) {
         Session session = HibernateUtil.getSessionFactory().openSession();
         try {
