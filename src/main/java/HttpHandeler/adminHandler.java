@@ -48,7 +48,7 @@ public class adminHandler implements HttpHandler {
 
                 if (exchange.getRequestMethod().equals("GET")) {
                     if (path.equals("/admin/users")) {
-                        handle_UserList(exchange, token);
+                        handle_UserListNotApproved(exchange, token);
                     } else if (path.equals("/admin/orders")) {
                         AdminSearchOrder(exchange, token);
                     } else if (path.equals("/admin/coupons")) {
@@ -57,7 +57,9 @@ public class adminHandler implements HttpHandler {
                         handle_getcoupons(exchange);
                     } else if (path.equals("/admin/transactions")) {
                         AdminSearchTransaction(exchange, token);
-                    } else {
+                    } else if (path.equals("/admin/allusers")){
+                        Handle_UserApproved(exchange, token);
+                    }else {
                         throw new NotFoundException("Not Found Path");
                     }
                 } else if (exchange.getRequestMethod().equals("POST")) {
@@ -95,7 +97,7 @@ public class adminHandler implements HttpHandler {
         }
     }
 
-    private void handle_UserList(HttpExchange exchange, String body) throws IOException {
+    private void handle_UserListNotApproved(HttpExchange exchange, String body) throws IOException {
         Gson gson = new Gson();
         Headers headers = exchange.getRequestHeaders();
         String authHeader = headers.getFirst("Authorization");
@@ -118,12 +120,30 @@ public class adminHandler implements HttpHandler {
 
         String json = gson.toJson(dtoList);
         sendResponse(exchange, 200, json);
+    }
 
+    private void Handle_UserApproved(HttpExchange exchange, String body) throws IOException {
+        Gson gson = new Gson();
+        Headers headers = exchange.getRequestHeaders();
+        String authHeader = headers.getFirst("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new UnauthorizedException("Unauthorized");
+        }
+        String token = authHeader.substring(7);
+        String phone = JwtUtil.validateToken(token);
+        var user = UserDao.getByPhone(phone);
+        if (!(user instanceof Admin)) {
+            throw new ForbiddenException("Forbidden");
+        }
+        var users = UserDao.getAllApprovedExceptAdmins();
+        var dtoList = users.stream().map(u -> new UserProfileDto(u.getId(), u.getFull_name(), u.getPhone(), u.getEmail(), u.getClass().getSimpleName(), // role
+                u.getAddress(), u.getProfileImageBase64(), u.getBankinfo() != null ? new Bankinfo(u.getBankinfo().getBank_name(), u.getBankinfo().getAccount_number()) : null)).toList();
 
+        String json = gson.toJson(dtoList);
+        sendResponse(exchange, 200, json);
     }
 
     private void handle_UserApproval(HttpExchange exchange, String body) throws IOException {
-        Gson gson = new Gson();
         Headers headers = exchange.getRequestHeaders();
         String authHeader = headers.getFirst("Authorization");
 
@@ -274,6 +294,7 @@ public class adminHandler implements HttpHandler {
 
         sendResponse(exchange, 200, "{\"message\": \"Coupon deleted successfully\"}");
     }
+
     private void hanleDelete(HttpExchange exchange) throws IOException {
         Headers headers = exchange.getRequestHeaders();
         String authHeader = headers.getFirst("Authorization");

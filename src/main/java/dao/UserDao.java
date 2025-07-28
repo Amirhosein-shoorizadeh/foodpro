@@ -94,6 +94,7 @@ public class UserDao {
 
         }
     }
+
     public static List<User> getAllNotApprovedExceptAdmins() {
         Session session = HibernateUtil.getSessionFactory().openSession();
         try {
@@ -101,6 +102,24 @@ public class UserDao {
             List<User> users = session.createQuery(
                             "FROM User u WHERE TYPE(u) <> Admin AND u.user_status = :status", User.class)
                     .setParameter("status", User_Status.notAvailable)
+                    .getResultList();
+            session.getTransaction().commit();
+            return users;
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+            throw e;
+        } finally {
+            session.close();
+        }
+    }
+
+    public static List<User> getAllApprovedExceptAdmins() {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        try {
+            session.beginTransaction();
+            List<User> users = session.createQuery(
+                            "FROM User u WHERE TYPE(u) <> Admin AND u.user_status = :status", User.class)
+                    .setParameter("status", User_Status.Availble) // فقط اونایی که وضعیت‌شون Availble هست
                     .getResultList();
             session.getTransaction().commit();
             return users;
@@ -121,16 +140,16 @@ public class UserDao {
         }
     }
 
-    public static boolean UserisBuyer (String token) throws UnauthorizedException {
+    public static boolean UserisBuyer(String token) throws UnauthorizedException {
         Token authToken = TokenDao.findByToken(token);
         if (authToken == null) {
             throw new UnauthorizedException("not logined");
         }
         String phone = authToken.getPhoneNumber();
-        if(getByPhone(phone) instanceof Buyer) {
+        if (getByPhone(phone) instanceof Buyer) {
             return true;
-        }else{
-            throw new UnauthorizedException("No data Acess" );
+        } else {
+            throw new UnauthorizedException("No data Acess");
         }
     }
 
@@ -140,7 +159,7 @@ public class UserDao {
             session.beginTransaction();
             session.delete(findById(id));
             session.getTransaction().commit();
-        }finally {
+        } finally {
             session.close();
         }
     }
