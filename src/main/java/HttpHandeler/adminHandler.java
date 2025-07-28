@@ -112,7 +112,7 @@ public class adminHandler implements HttpHandler {
             throw new ForbiddenException("Forbidden");
         }
 
-        var users = UserDao.getAllExceptAdmins();
+        var users = UserDao.getAllNotApprovedExceptAdmins();
         var dtoList = users.stream().map(u -> new UserProfileDto(u.getId(), u.getFull_name(), u.getPhone(), u.getEmail(), u.getClass().getSimpleName(), // role
                 u.getAddress(), u.getProfileImageBase64(), u.getBankinfo() != null ? new Bankinfo(u.getBankinfo().getBank_name(), u.getBankinfo().getAccount_number()) : null)).toList();
 
