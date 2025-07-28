@@ -1,12 +1,13 @@
 package entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
 
 @Entity
 public class PaymentTransaction {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     @ManyToOne
@@ -19,12 +20,18 @@ public class PaymentTransaction {
 
     private TransactionStatus status;
 
+    private LocalDateTime paymentDate;
+
+    private double amount;
+
     public PaymentTransaction() {}
-    public PaymentTransaction(Order order, Buyer buyer, TransactionMethod method, TransactionStatus status) {
+    public PaymentTransaction(Order order, Buyer buyer, TransactionMethod method,LocalDateTime paymentDate, TransactionStatus status,double amount) {
         this.order = order;
         this.buyer = buyer;
         this.method = method;
         this.status = status;
+        this.paymentDate = paymentDate;
+        this.amount = amount;
     }
 
     public long getId() {
@@ -66,4 +73,24 @@ public class PaymentTransaction {
     public void setStatus(TransactionStatus status) {
         this.status = status;
     }
+
+    public LocalDateTime getPaymentDate() {
+        return paymentDate;
+    }
+
+    public void setPaymentDate(LocalDateTime paymentDate) {
+        this.paymentDate = paymentDate;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(double amount) {
+        this.amount = amount;
+    }
+
+
 }
+
+

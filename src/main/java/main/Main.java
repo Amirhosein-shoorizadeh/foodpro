@@ -46,6 +46,7 @@ public class Main {
             server.createContext("/orders",new OrderHandler());
             server.createContext("/carts",new OrderHandler());
             server.createContext("/coupons",new OrderHandler());
+            server.createContext("/deliveries",new CourierHandler());
             
 
             server.start();

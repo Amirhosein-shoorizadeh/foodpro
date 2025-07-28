@@ -13,6 +13,7 @@ import util.JwtUtil;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
 
@@ -38,9 +39,10 @@ public class OrderHandler implements HttpHandler {
                     String[] pathParts = path.split("/");
                     long order_id = Long.parseLong(pathParts[2]);
                     GetOrderWithId(exchange,token,order_id);
-                }else if(path.equals("/orders/history")) {
-                    GetOrderHistory(exchange,token);
-                }else if(path.equals("/carts")) {
+                }else if(path.equals("/orders/active")){
+                    GetOrdersActive(exchange,token);
+                }
+                else if(path.equals("/carts")) {
                     GetCartsOfBuyer(exchange,token);
                 }
                 else{throw new NotFoundException("Not Found PATH");}
@@ -55,10 +57,12 @@ public class OrderHandler implements HttpHandler {
                 }else if(path.matches("/orders/\\d+") && path.split("/")[1].equals("orders")) {
                     String[] pathParts = path.split("/");
                     long restaurant_id = Long.parseLong(pathParts[2]);
-                    System.out.println(33);;
                     AddFoodToCart(exchange,restaurant_id,token);
                 }else if(path.equals("/coupons")) {
                     CheckCoupon(exchange,token);
+                }else if(path.equals("/orders/history")) {
+                    System.out.println(9966996);
+                    GetOrderHistory(exchange,token);
                 }
                 else {throw new NotFoundException("Not Found PATH");}
             }else {throw new NotFoundException("Not Found Method");}
@@ -87,19 +91,28 @@ public class OrderHandler implements HttpHandler {
 
     public void GetTransactionHistory(HttpExchange exchange,String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
+        User user = UserDao.getByPhone(phone);
+        if(user != null){
+            if(user instanceof Buyer){
+                List<PaymentTransaction> transactions = PaymentTransactionDao.getUserTransaction(phone);
+                JSONArray array = new JSONArray();
+                for (PaymentTransaction transaction : transactions){
+                    JSONObject object = new JSONObject();
+                    object.put("order_id",transaction.getOrder() != null ? transaction.getOrder().getId() : -1);
+                    object.put("amount",transaction.getAmount());
+                    object.put("id",transaction.getId());
+                    object.put("user_id",user.getId());
+                    object.put("status",transaction.getStatus());
+                    object.put("method",transaction.getMethod());
+                    object.put("date_time", transaction.getPaymentDate().format(
+                            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                    array.put(object);
+                }
+                System.out.println(array.toString());
+                sendResponse(exchange, 200, array.toString());
+            }else throw  new ForbiddenException("Forbidden");
+        }else throw  new NotFoundException("Not Found User");
 
-        List<PaymentTransaction> paymentTransactions = OrderService.GetTransactionHistory(phone);
-        JSONArray payments = new JSONArray();
-        for(PaymentTransaction paymentTransaction : paymentTransactions){
-            JSONObject transaction = new JSONObject();
-            transaction.put("id", paymentTransaction.getId());
-            transaction.put("order_id", paymentTransaction.getOrder().getId());
-            transaction.put("user_id",paymentTransaction.getBuyer().getId());
-            transaction.put("method", paymentTransaction.getMethod().name());
-            transaction.put("status", paymentTransaction.getStatus().name());
-            payments.put(transaction);
-        }
-        sendResponse(exchange, 200, payments.toString());
     }
 
     public void TopUpWallet(HttpExchange exchange,String token) throws IOException {
@@ -118,19 +131,31 @@ public class OrderHandler implements HttpHandler {
 
     public void MakeOnlinePayment(HttpExchange exchange,String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
+        System.out.println(999999);
+
 
         String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
         JSONObject jsonObject = new JSONObject(requestBody);
         long Order_id = jsonObject.getLong("order_id");
         String Method = jsonObject.getString("method");
-        PaymentTransaction paymentTransaction = OrderService.MakeOnlinePayment(phone, Order_id, Method);
+        double Amount = jsonObject.getDouble("amount");
+        String Address = jsonObject.getString("address");
+
+
+        PaymentTransaction paymentTransaction = OrderService.MakeOnlinePayment(phone, Order_id, Method,Address,Amount);
+
         PaymentTransactionDao.savePaymentTransaction(paymentTransaction);
         JSONObject response = new JSONObject();
         response.put("id", paymentTransaction.getId());
-        response.put("order_id", paymentTransaction.getOrder().getId());
+        response.put("order_id", paymentTransaction.getOrder() != null ? paymentTransaction.getOrder().getId() : -1);
         response.put("user_id", paymentTransaction.getBuyer().getId());
         response.put("method", Method);
         response.put("status", paymentTransaction.getStatus().name());
+        System.out.println(paymentTransaction.getStatus().name());
+        response.put("date_time", paymentTransaction.getPaymentDate().format(
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        response.put("amount",paymentTransaction.getAmount());
+        System.out.println(response.toString());
         sendResponse(exchange, 200, response.toString());
     }
 
@@ -182,19 +207,28 @@ public class OrderHandler implements HttpHandler {
     }
     private void GetOrderHistory(HttpExchange exchange,String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
+        System.out.println(1);
+        System.out.println(2);
 
         User user = UserDao.getByPhone(phone);
+        System.out.println(2);
         if(user != null){
+            System.out.println(3);
             if(user instanceof Buyer){
+                System.out.println(4);
                 Buyer buyer = (Buyer)user;
                 String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
                 JSONObject jsonObject = new JSONObject(requestBody);
                 String Search = jsonObject.optString("search",null);
                 String Vendor = jsonObject.optString("vendor",null);
+                System.out.println(Search);
+                System.out.println(Vendor);
                 Set<Order> orders = OrderDao.BuyerSearch(Vendor,Search,buyer.getId());
                 JSONArray jsonArray = new JSONArray();
                 for(Order order : orders){
-                    jsonArray.put(OrderService.convertOrderToJson(order));
+                    if(order.getStatus() == OrderStatus.COMPLETED){
+                        jsonArray.put(OrderService.convertOrderToJson(order));
+                    }
                 }
                 sendResponse(exchange, 200, jsonArray.toString());
             }else throw  new ForbiddenException("Forbidden");
@@ -203,6 +237,7 @@ public class OrderHandler implements HttpHandler {
     private void AddFoodToCart(HttpExchange exchange,long restaurant_id,String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
         User user = UserDao.getByPhone(phone);
+        System.out.println(222222);
 
         if(user != null){
             if(user instanceof Buyer){
@@ -233,6 +268,7 @@ public class OrderHandler implements HttpHandler {
                                 cart.setRestaurant(restaurant);
                                 cart.setTaxFee(restaurant.getTax_fee());
                                 cart.setAdditionalFee(restaurant.getAdditional_fee());
+                                cart.setCourierFee(30000);
                                 cart.addRawPrice(food.getPrice()*quantity);
                                 cart.calculatePayPrice();
                                 cart.setBuyer(buyer);
@@ -287,7 +323,7 @@ public class OrderHandler implements HttpHandler {
                                 OrderDao.update(order);
                                 CouponDao.update(coupon);
                                 JSONObject response = new JSONObject();
-                                response.put("PayPrice",order.getPayPrice());
+                                response.put("pay_price",order.getPayPrice());
                                 response.put("coupon_id",coupon.getId());
                                 sendResponse(exchange, 200, response.toString());
 
@@ -297,6 +333,46 @@ public class OrderHandler implements HttpHandler {
                 }else throw new NotFoundException("Not Found Order");
             }else throw  new ForbiddenException("Forbidden");
         }else throw new NotFoundException("Not Found User");
+    }
+
+    private void GetOrdersActive(HttpExchange exchange,String token) throws IOException {
+        String phone = JwtUtil.validateToken(token);
+        User user = UserDao.getByPhone(phone);
+        if(user != null){
+            if(user instanceof Buyer){
+                Buyer buyer = (Buyer)user;
+                List<Order> orders = OrderDao.getOrdersActive(buyer.getId());
+                JSONArray array = new JSONArray();
+                for (Order order : orders){
+                    array.put(OrderService.convertOrderToJson(order));
+                }
+                sendResponse(exchange, 200, array.toString());
+
+            }else throw  new ForbiddenException("Forbidden");
+        }else throw  new NotFoundException("Not Found User");
+    }
+
+    private void GetTransAction(HttpExchange exchange,String token) throws IOException {
+        String phone = JwtUtil.validateToken(token);
+        User user = UserDao.getByPhone(phone);
+        if(user != null){
+            if(user instanceof Buyer){
+                List<PaymentTransaction> transactions = PaymentTransactionDao.getUserTransaction(phone);
+                JSONArray array = new JSONArray();
+                for (PaymentTransaction transaction : transactions){
+                    JSONObject object = new JSONObject();
+                    object.put("order_id",transaction.getOrder().getId());
+                    object.put("amount",transaction.getAmount());
+                    object.put("id",transaction.getId());
+                    object.put("user_id",user.getId());
+                    object.put("status",transaction.getStatus());
+                    object.put("method",transaction.getMethod());
+                    object.put("date_time",transaction.getPaymentDate().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+                    array.put(object);
+                }
+                sendResponse(exchange, 200, array.toString());
+            }else throw  new ForbiddenException("Forbidden");
+        }else throw  new NotFoundException("Not Found User");
     }
 
 

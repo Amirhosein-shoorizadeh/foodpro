@@ -35,13 +35,14 @@ public class FavoriteHandler implements HttpHandler {
             String token = authHeader.substring(7);
 
             if ("GET".equalsIgnoreCase(method)) {
-                if (path.matches("/favorites/")) {
+                if (path.equals("/favorites")) {
                     handle_GetFavoriteList(exchange, token);
                 } else {
                     sendResponse(exchange, 404, "Path not found");
                 }
             } else if ("PUT".equalsIgnoreCase(method)) {
                 if (path.matches("/favorites/\\d+")) {
+                    System.out.println(1111);
                     handle_UpdateFavorite( exchange, token);
                 } else {
                     sendResponse(exchange, 404, "Path not found");
@@ -119,6 +120,7 @@ public class FavoriteHandler implements HttpHandler {
         User user = UserDao.getByPhone(phone);
         if (user != null) {
             if (user instanceof Buyer buyer) {
+                System.out.println(333);
                 String[] paths = exchange.getRequestURI().getPath().split("/");
                 long id = Long.parseLong(paths[paths.length - 1]);
                 Restaurant mewRestaurant = RestaurantDao.getById(id);

@@ -5,10 +5,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import dto.FoodDto;
 import dto.RestaurantDto;
-import entity.Food;
-import entity.Menu;
-import entity.Order;
-import entity.Restaurant;
+import entity.*;
 import exception.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -74,7 +71,7 @@ public class RestaurantHandler implements HttpHandler {
                 }
             }
             else if (method.equals("PUT")) {
-                if (path.matches("/restaurants/\\d+")) {
+                if (path.matches("/restaurants/\\d+") && path.split("/").length == 3) {
                     String[] pathParts = path.split("/");
                     long id = Long.parseLong(pathParts[pathParts.length - 1]);
                     UpdateRestaurant(exchange, id,token);
@@ -91,6 +88,7 @@ public class RestaurantHandler implements HttpHandler {
                 }else if (path.matches("/restaurants/orders/\\d+") && path.split("/")[2].equals("orders")) {
                     String[] pathParts = path.split("/");
                     long OrderId = Long.parseLong(pathParts[3]);
+                    System.out.println(49494949);
                     ChangeStatusOfOrder(exchange, OrderId,token);
                 }
             }
@@ -113,14 +111,7 @@ public class RestaurantHandler implements HttpHandler {
                     long foodId = Long.parseLong(pathParts[5]);
                     DeleteFoodFromMenu(exchange,restaurantId,title,foodId,token);
                 }
-            }else if(method.equals("PATCH")) {
-                if (path.equals("/restaurants/orders/\\d+")) {
-                    String[] pathParts = path.split("/");
-                    long OrderId = Long.parseLong(pathParts[3]);
-                    ChangeStatusOfOrder(exchange, OrderId,token);
-                }
-            }
-            else{
+            } else{
                 throw new NotFoundException("Not found method");
             }
         }catch (UnauthorizedException e){
@@ -236,19 +227,19 @@ public class RestaurantHandler implements HttpHandler {
     }
 
     private void AddMenu(HttpExchange exchange,long restaurant_id,String token) throws IOException {
-        System.out.println(33333);
+
 
         String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
         String phone = JwtUtil.validateToken(token);
-        System.out.println(444444);
+
 
         JSONObject json = new JSONObject(requestBody);
-        System.out.println(55555);
+
         String title = json.getString("title");
-        System.out.println(6666);
+
         System.out.println(title);
         RestaurantService.AddMenu(phone,restaurant_id,title);
-        System.out.println(77777);
+
         sendResponse(exchange, 200,"{\"title\": \"" + title+ "\"}");
     }
     private void DeleteMenu(HttpExchange exchange,long restaurant_id,String title,String token) throws IOException {
@@ -269,9 +260,7 @@ public class RestaurantHandler implements HttpHandler {
     }
     private void DeleteFoodFromMenu(HttpExchange exchange,long restaurant_id,String title,long food_id,String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
-        System.out.println(888);
 
-        System.out.println(5555);
         RestaurantService.DeleteFoodFromMenu(phone,restaurant_id,food_id,title);
         sendResponse(exchange, 200,"{\"message\": \"Item removed from restaurant menu successfully\"}" );
     }
@@ -284,17 +273,21 @@ public class RestaurantHandler implements HttpHandler {
         Set<Order> orders =RestaurantService.GetListOfOrder(phone,restaurant_id,jsonObject);
         JSONArray array = new JSONArray();
         for(Order order : orders){
-            array.put(OrderService.convertOrderToJson(order));
+            if(order.getStatus() != OrderStatus.NON_SUBMITTED){
+                array.put(OrderService.convertOrderToJson(order));
+            }
         }
         sendResponse(exchange,200,array.toString());
     }
 
     private void ChangeStatusOfOrder(HttpExchange exchange,long order_id,String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
+        System.out.println(999999);
 
         String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
         JSONObject jsonObject = new JSONObject(requestBody);
         String status = jsonObject.getString("status");
+        System.out.println(status);
         RestaurantService.ChangeStatusOfOrder(phone,order_id,status);
         sendResponse(exchange, 200,"{\"message\": \"" + "Order status changed successfully" + "\"}");
     }

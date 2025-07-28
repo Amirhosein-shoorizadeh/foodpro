@@ -6,7 +6,11 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import dao.*;
 import dto.FoodDto;
+import entity.Buyer;
 import entity.Food;
+import entity.User;
+import exception.ForbiddenException;
+import exception.NotFoundException;
 import exception.UnauthorizedException;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -32,12 +36,19 @@ import java.util.List;
         if ("GET".equalsIgnoreCase(method)) {
             if (path.matches("^/items/\\d+$")) {
                 handleGetItemById(exchange,token);
-            }else if(path.matches("/items")){
-                GetItems(exchange,token);
-            }else {
+            }else if(path.equals("/items/best")){
+                GetBestItems(exchange,token);
+            }
+            else {
                 sendResponse(exchange, 404, "Path not found");
             }
-        } else {
+        }else if("POST".equalsIgnoreCase(method)) {
+             if(path.matches("/items")){
+                GetItems(exchange,token);
+            }
+
+        }
+        else {
             sendResponse(exchange, 405, "Method not allowed");
         }
     }
@@ -68,19 +79,57 @@ import java.util.List;
         String phone = JwtUtil.validateToken(token);
         JSONObject jsonObject = new JSONObject(requestBody);
         String search = jsonObject.optString("search",null);
-        long price = Long.parseLong(jsonObject.optString("price",null));
+        double price = Double.parseDouble(jsonObject.optString("price",null));
         JSONArray jsonArray = jsonObject.optJSONArray("keywords");
+
         List<String> keywords = new ArrayList<>();
         for (int i = 0; i < jsonArray.length(); i++) {
             keywords.add(jsonArray.getString(i));
         }
-        List<Food> foods =  FoodDao.searchFoods(search,price,keywords);
+
+        int page = jsonObject.optInt("page",1);
+        int pageSize = jsonObject.optInt("pageSize",10);
+
+        System.out.println(454545);
+
+        List<Food> foods =  FoodDao.searchFoods(search,price,keywords,page,pageSize);
         List<FoodDto> dtos = foods.stream()
                 .map(FoodDto::new)
                 .toList();
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String json = gson.toJson(dtos);
         sendResponse(exchange, 200, json);
+    }
+
+    private void GetBestItems(HttpExchange exchange,String token) throws IOException {
+        try{String phone = JwtUtil.validateToken(token);
+            User user = UserDao.getByPhone(phone);
+            if (user == null) {
+                throw new UnauthorizedException("Unauthorized");
+            }
+            if(user instanceof Buyer){
+                List<Food> foods = FoodDao.getTopRatedFoods(10);
+                JSONArray jsonArray = new JSONArray();
+                for (Food food : foods) {
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put("id",food.getId());
+                    jsonObject.put("name",food.getName());
+                    jsonObject.put("price",food.getPrice());
+                    jsonObject.put("keywords",new JSONArray(food.getKeywords()));
+                    jsonObject.put("imageBase64",food.getImageBase64());
+                    jsonObject.put("description",food.getDescription());
+                    jsonObject.put("supply",food.getSupply());
+                    jsonObject.put("vendor_id",food.getRestaurant().getId());
+                    jsonArray.put(jsonObject);
+                }
+                sendResponse(exchange, 200, jsonArray.toString());
+            }else{throw new ForbiddenException("Forbidden"); }
+        }catch (UnauthorizedException e){
+            sendResponse(exchange, 401, "{\"error\": \"" + e.getMessage() + "\"}");
+        }catch (NotFoundException e){
+            sendResponse(exchange, 404, "{\"error\": \"" + e.getMessage() + "\"}");
+        }
+
     }
 
 

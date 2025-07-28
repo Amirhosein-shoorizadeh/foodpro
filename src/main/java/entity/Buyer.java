@@ -14,7 +14,7 @@ public class Buyer extends User {
     @OneToMany(mappedBy = "buyer", cascade = CascadeType.ALL)
     private List<PaymentTransaction> paymentTransactions = new ArrayList<>();
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_favorite_restaurants",
             joinColumns = @JoinColumn(name = "user_id"),

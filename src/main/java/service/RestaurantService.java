@@ -251,6 +251,7 @@ public class RestaurantService {
         if(canModifyRestaurant(SellerPhone,restaurantId)){
             System.out.println(4444);
             Restaurant restaurant = RestaurantDao.getById(restaurantId);
+            System.out.println(restaurantId);
             String Status = jsonObject.optString("status",null);
             System.out.println(5);
             String Search = jsonObject.optString("search",null);
@@ -264,6 +265,9 @@ public class RestaurantService {
             System.out.println(user);
             System.out.println(courier);
             Set<Order> orders = OrderDao.RestaurantSearchOrders(restaurantId,Status,Search,user,courier);
+            for(Order order:orders){
+                System.out.println(order.getId());
+            }
             return orders;
         }
         return null;
@@ -284,14 +288,14 @@ public class RestaurantService {
         }
         Restaurant restaurant = order.getRestaurant();
         List<OrderItem> orderItems = order.getOrderItems();
+
         if(canModifyRestaurant(SellerPhone,restaurant.getId())){
 
             if(status.equals("accepted")){
                 if( order.getStatus() == OrderStatus.SUBMITTED){
                     order.setStatus(OrderStatus.WAITING_VENDOR);
-                    LocalDateTime now = LocalDateTime.now();
-                    String updatedAt = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                    order.setUpdatedAt(updatedAt);
+
+                    order.setUpdatedAt(LocalDateTime.now());
                 }else {
                     throw new ForbiddenException("This order is not in the correct stage");
                 }
@@ -299,9 +303,7 @@ public class RestaurantService {
                 if(order.getStatus() == OrderStatus.SUBMITTED){
                     order.setStatus(OrderStatus.CANCELLED);
 
-                    LocalDateTime now = LocalDateTime.now();
-                    String updatedAt = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                    order.setUpdatedAt(updatedAt);
+                    order.setUpdatedAt(LocalDateTime.now());
 
                     double balance = order.getPayPrice();
                     Buyer buyer = order.getBuyer();
@@ -319,9 +321,7 @@ public class RestaurantService {
                 if(order.getStatus() == OrderStatus.WAITING_VENDOR){
                     order.setStatus(OrderStatus.FINDING_COURIER);
 
-                    LocalDateTime now = LocalDateTime.now();
-                    String updatedAt = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                    order.setUpdatedAt(updatedAt);
+                    order.setUpdatedAt(LocalDateTime.now());
                 }else {
                     throw new ForbiddenException("This order is not in the correct stage");
                 }

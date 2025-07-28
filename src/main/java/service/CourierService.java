@@ -43,9 +43,8 @@ public class CourierService {
                     order.setStatus(OrderStatus.ACCEPTED_BY_COURIER);
                     order.setCourier(courier);
 
-                    LocalDateTime now = LocalDateTime.now();
-                    String updatedAt = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                    order.setUpdatedAt(updatedAt);
+
+                    order.setUpdatedAt(LocalDateTime.now());
                 }else{
                     throw new ForbiddenException("This order is not in the correct stage");
                 }
@@ -53,9 +52,8 @@ public class CourierService {
                 if(order.getStatus() == OrderStatus.ACCEPTED_BY_COURIER){
                     order.setStatus(OrderStatus.ON_THE_WAY);
 
-                    LocalDateTime now = LocalDateTime.now();
-                    String updatedAt = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                    order.setUpdatedAt(updatedAt);
+
+                    order.setUpdatedAt(LocalDateTime.now());
                 }else{
                     throw new ForbiddenException("This order is not in the correct stage");
                 }
@@ -64,9 +62,7 @@ public class CourierService {
                 if(order.getStatus() == OrderStatus.ON_THE_WAY){
                     order.setStatus(OrderStatus.COMPLETED);
 
-                    LocalDateTime now = LocalDateTime.now();
-                    String updatedAt = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                    order.setUpdatedAt(updatedAt);
+                    order.setUpdatedAt(LocalDateTime.now());
                 }else {
                     throw new ForbiddenException("This order is not in the correct stage");
                 }

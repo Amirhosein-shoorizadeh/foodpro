@@ -1,8 +1,11 @@
 package dto;
 
+import entity.Rating;
+
 import java.util.List;
 
 public class RatingDto {
+    private long id;
 
     private long orderId;
 
@@ -53,4 +56,13 @@ public class RatingDto {
     public void setOrderId(long orderId) {
         this.orderId = orderId;
     }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
 }

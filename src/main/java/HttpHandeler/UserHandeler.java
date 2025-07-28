@@ -42,6 +42,7 @@ public class UserHandeler implements HttpHandler {
             } else if (path.equals("/auth/login")) {
                 handleLogin(exchange, body);
             } else if (path.equals("/auth/logout")) {
+
                 handleLogout(exchange);
 
             } else {
@@ -113,9 +114,13 @@ public class UserHandeler implements HttpHandler {
         String authHeader = headers.getFirst("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
+            System.out.println(0);
             TokenDao.revoke(token);
+            System.out.println(1);
             Token tokenTemp = TokenDao.findByToken(token);
+            System.out.println(10);
             TokenDao.delete(tokenTemp);
+            System.out.println(12);
             sendResponse(exchange, 200, "{\"message\": \"Logged out successfully\"}");
         } else {
             sendResponse(exchange, 401, "{\"error\": \"Unauthorized\"}");

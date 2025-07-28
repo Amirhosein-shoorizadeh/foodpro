@@ -68,6 +68,7 @@ public class UserManager {
             user.setProfileImageBase64(profileDto.profileImageBase64);
             user.setAddress(profileDto.address);
             user.setBankinfo(profileDto.bank_info);
+            user.setPhone(profileDto.phone);
         }
         UserDao.update(user);
     }

@@ -23,7 +23,6 @@ public class PaymentTransactionDao {
         try(Session session = HibernateUtil.getSessionFactory().openSession()){
             String hql = "SELECT pt FROM PaymentTransaction pt " +
                     "JOIN FETCH pt.buyer " +
-                    "JOIN FETCH pt.order " +
                     "WHERE pt.buyer.phone = :phone";
 
              return session.createQuery(hql, PaymentTransaction.class)

@@ -7,10 +7,7 @@ import dao.OrderDao;
 import dao.RatingDao;
 import dao.UserDao;
 import dto.RatingDto;
-import entity.Buyer;
-import entity.Rating;
-import entity.Seller;
-import entity.User;
+import entity.*;
 import exception.ForbiddenException;
 import exception.NotFoundException;
 import exception.UnauthorizedException;
@@ -89,9 +86,14 @@ public class RatingHandler implements HttpHandler {
 
                     InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
                     RatingDto dto = new Gson().fromJson(isr, RatingDto.class);
+
                     if (OrderDao.isThatForThisOne(user, dto.getOrderId())) {
                         Rating rating = new Rating(dto,buyer);
+                        Order order = OrderDao.getOrderById(dto.getOrderId());
+                        rating.setOrder(order);
+                        order.setRating(rating);
                         RatingDao.saveRating(rating);
+
                         sendResponse(exchange, 200, "Success");
                     } else {
                         throw new ForbiddenException("Forbidden");
@@ -159,6 +161,7 @@ public class RatingHandler implements HttpHandler {
                     jsonObject.put("comments", dtoList);
                     jsonObject.put("avg_rating", avg_rating);
 
+
                     String json = jsonObject.toString();
                     exchange.getResponseHeaders().set("Content-Type", "application/json");
                     sendResponse(exchange, 200, json);
@@ -183,7 +186,7 @@ public class RatingHandler implements HttpHandler {
                     String[] paths = exchange.getRequestURI().getPath().split("/");
                     long orderId = Long.parseLong(paths[paths.length - 1]);
                     if (RatingDao.canEditId(user, orderId)) {
-                        Rating rating = RatingDao.findById(orderId);
+                        Rating rating = RatingDao.findByOrderId(orderId);
                         InputStreamReader reader = new InputStreamReader(exchange.getRequestBody());
                         RatingDto dto = new Gson().fromJson(reader, RatingDto.class);
                         rating.setRate(dto.getRate());
@@ -215,7 +218,7 @@ public class RatingHandler implements HttpHandler {
                     String[] paths = exchange.getRequestURI().getPath().split("/");
                     long orderId = Long.parseLong(paths[paths.length - 1]);
                     if (RatingDao.canEditId(user, orderId)) {
-                        Rating rating = RatingDao.findById(orderId);
+                        Rating rating = RatingDao.findByOrderId(orderId);
                         RatingDao.deleteRating(rating);
                         sendResponse(exchange, 200, "success");
                     } else {
