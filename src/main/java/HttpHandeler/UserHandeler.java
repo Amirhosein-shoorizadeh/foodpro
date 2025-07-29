@@ -43,7 +43,6 @@ public class UserHandeler implements HttpHandler {
                 handleLogin(exchange, body);
             } else if (path.equals("/auth/logout")) {
                 handleLogout(exchange);
-
             } else {
                 sendResponse(exchange, 404, "Path not found");
             }
@@ -56,11 +55,9 @@ public class UserHandeler implements HttpHandler {
         } else if ("PUT".equalsIgnoreCase(method)) {
             if (path.matches("/auth/profile")) {
                 UpdateCurrentProfile(exchange, body);
-
             } else {
                 sendResponse(exchange, 404, "Path not found");
             }
-
         } else {
             sendResponse(exchange, 405, "Method not allowed");
         }
@@ -102,7 +99,10 @@ public class UserHandeler implements HttpHandler {
             } else {
                 sendResponse(exchange, 401, "Invalid credentials");
             }
-        } catch (Exception e) {
+        }catch (NotApproved e){
+            sendResponse(exchange, 300, e.getMessage());
+        }
+        catch (Exception e) {
             e.printStackTrace();
             sendResponse(exchange, 500, e.getMessage());
         }

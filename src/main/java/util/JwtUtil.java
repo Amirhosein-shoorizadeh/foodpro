@@ -2,12 +2,14 @@ package util;
 
 import dao.*;
 import entity.User_Status;
+import exception.NotApproved;
 import exception.UnauthorizedException;
 import entity.Token;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
 import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.time.LocalDateTime;
@@ -29,12 +31,11 @@ public class JwtUtil {
                 .compact();
     }
 
-    public static String validateToken(String token ) throws UnauthorizedException {
+    public static String validateToken(String token ) throws IOException , NotApproved , UnauthorizedException {
         if (TokenDao.isRevoked(token)) throw new UnauthorizedException("Token is revoked");
         Token tokenEntity = TokenDao.findByToken(token);
         if (tokenEntity == null) {
             throw new UnauthorizedException("Token not found");
-
         }
         try {
             byte[] keyBytes = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
@@ -51,7 +52,7 @@ public class JwtUtil {
             if (UserDao.getByPhone(mew).getUser_status().equals(User_Status.Availble)) {
                 return mew;
             }else  {
-                throw new UnauthorizedException("Invalid token");
+                throw new NotApproved("Not approved");
             }
         } catch (Exception e) {
             throw new UnauthorizedException(e.getMessage());
