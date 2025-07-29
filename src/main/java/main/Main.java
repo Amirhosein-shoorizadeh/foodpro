@@ -20,17 +20,17 @@ import java.util.concurrent.ScheduledExecutorService;
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) {
-//        String password = "mew1384";
-//        String name = "amir1384";
-//        String phone = "13841384";
-//        String email = "13841384@gmail.com";
-//        String Address = "amir1384";
-//        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
-//        String profileImageBase64 = "amir1384";
-//        Bankinfo bankinfo = new Bankinfo();
-//        Admin admin = new Admin(hashedPassword, name, phone, email, profileImageBase64, bankinfo, Address);
+ //       String password = "mew1384";
+ //      String name = "amir1384";
+ //      String phone = "13841384";
+  //     String email = "13841384@gmail.com";
+   //   String Address = "amir1384";
+//      String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+  //     String profileImageBase64 = "amir1384";
+ //     Bankinfo bankinfo = new Bankinfo();
+ //     Admin admin = new Admin(hashedPassword, name, phone, email, profileImageBase64, bankinfo, Address);
         try {
-//            UserDao.save(admin);
+ //          UserDao.save(admin);
             TokenCleanupService.start();
             HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
             server.createContext("/restaurant", new RestaurantHandler());
