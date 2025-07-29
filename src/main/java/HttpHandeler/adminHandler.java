@@ -65,13 +65,13 @@ public class adminHandler implements HttpHandler {
                 } else if (exchange.getRequestMethod().equals("POST")) {
                     if (path.equals("/admin/coupons")) {
                         handle_CreateCoupon(exchange, token);
-                    } else {
+                    }else if (path.matches("/admin/users/\\d+/status") && path.split("/").length == 5) {
+                        handle_UserApproval(exchange, token);
+                    }else {
                         sendResponse(exchange, 401, "Unauthorized");
                     }
                 } else if (exchange.getRequestMethod().equals("PATCH")) {
-                    if (path.equals("/admin/users/\\d+/status")) {
-                        handle_UserApproval(exchange, token);
-                    }
+
                 } else if (exchange.getRequestMethod().equals("DELETE")) {
                     if (path.matches("/admin/coupons/\\d+") && path.split("/")[2].equals("coupons")) {
                         handle_DeleteCoupon(exchange);
@@ -97,18 +97,11 @@ public class adminHandler implements HttpHandler {
         }
     }
 
-    private void handle_UserListNotApproved(HttpExchange exchange, String body) throws IOException {
+    private void handle_UserListNotApproved(HttpExchange exchange, String token) throws IOException {
         Gson gson = new Gson();
-        Headers headers = exchange.getRequestHeaders();
-        String authHeader = headers.getFirst("Authorization");
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new UnauthorizedException("Unauthorized");
-        }
-
-        String token = authHeader.substring(7);
+        System.out.println(55555);
         String phone = JwtUtil.validateToken(token);
-
+        System.out.println(444444);
         var user = UserDao.getByPhone(phone);
         if (!(user instanceof Admin)) {
             throw new ForbiddenException("Forbidden");
@@ -122,14 +115,8 @@ public class adminHandler implements HttpHandler {
         sendResponse(exchange, 200, json);
     }
 
-    private void Handle_UserApproved(HttpExchange exchange, String body) throws IOException {
+    private void Handle_UserApproved(HttpExchange exchange, String token) throws IOException {
         Gson gson = new Gson();
-        Headers headers = exchange.getRequestHeaders();
-        String authHeader = headers.getFirst("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new UnauthorizedException("Unauthorized");
-        }
-        String token = authHeader.substring(7);
         String phone = JwtUtil.validateToken(token);
         var user = UserDao.getByPhone(phone);
         if (!(user instanceof Admin)) {
@@ -143,25 +130,22 @@ public class adminHandler implements HttpHandler {
         sendResponse(exchange, 200, json);
     }
 
-    private void handle_UserApproval(HttpExchange exchange, String body) throws IOException {
-        Headers headers = exchange.getRequestHeaders();
-        String authHeader = headers.getFirst("Authorization");
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new UnauthorizedException("Unauthorized");
-        }
-
-        String token = authHeader.substring(7);
+    private void handle_UserApproval(HttpExchange exchange, String token) throws IOException {
+        System.out.println(1111);
         String phone = JwtUtil.validateToken(token);
+        System.out.println(2222);
         var user = UserDao.getByPhone(phone);
         if (!(user instanceof Admin)) {
             throw new ForbiddenException("Forbidden");
         }
+        System.out.println(4444);
         String path = exchange.getRequestURI().getPath();
-        Long userId = Long.parseLong(path.substring(path.lastIndexOf("/") + 1));
+        Long userId = Long.parseLong(path.split("/")[3]);
+        System.out.println(userId);
         User change = UserDao.findById(userId);
         change.setUser_status(User_Status.Availble);
         UserDao.update(change);
+        sendResponse(exchange, 200, "OK");
 
     }
 
