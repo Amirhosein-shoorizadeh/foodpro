@@ -73,9 +73,9 @@ public class adminHandler implements HttpHandler {
                         handle_UserApproval(exchange, token);
                     }
                 } else if (exchange.getRequestMethod().equals("DELETE")) {
-                    if (path.equals("/admin/coupons/\\d+")) {
+                    if (path.matches("/admin/coupons/\\d+") && path.split("/")[2].equals("coupons")) {
                         handle_DeleteCoupon(exchange);
-                    } else if (path.equals("/admin/users/\\d+")) {
+                    } else if (path.matches("/admin/users/\\d+") && path.split("/")[2].equals("users")) {
                         hanleDelete(exchange);
                     }
                 } else if (exchange.getRequestMethod().equals("PUT")) {
@@ -165,24 +165,20 @@ public class adminHandler implements HttpHandler {
 
     }
 
-    private void handle_CreateCoupon(HttpExchange exchange, String body) throws IOException {
+    private void handle_CreateCoupon(HttpExchange exchange, String token) throws IOException {
         try {
             Gson gson = new Gson();
-            Headers headers = exchange.getRequestHeaders();
-            String authHeader = headers.getFirst("Authorization");
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                throw new UnauthorizedException("Unauthorized");
-            }
 
-            String token = authHeader.substring(7);
             String phone = JwtUtil.validateToken(token);
+
+            String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
 
             var user = UserDao.getByPhone(phone);
             if (!(user instanceof Admin)) {
                 throw new ForbiddenException("Forbidden");
             }
 
-            CouponDto dto = gson.fromJson(body, CouponDto.class);
+            CouponDto dto = gson.fromJson(requestBody, CouponDto.class);
 
             Coupon coupon = dto.toEntity();
 
@@ -197,14 +193,8 @@ public class adminHandler implements HttpHandler {
 
     }
 
-    private void handle_CouponList(HttpExchange exchange, String body) throws IOException {
+    private void handle_CouponList(HttpExchange exchange, String token) throws IOException {
         Gson gson = new Gson();
-        Headers headers = exchange.getRequestHeaders();
-        String authHeader = headers.getFirst("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new UnauthorizedException("Unauthorized");
-        }
-        String token = authHeader.substring(7);
         String phone = JwtUtil.validateToken(token);
 
         var user = UserDao.getByPhone(phone);
@@ -228,30 +218,24 @@ public class adminHandler implements HttpHandler {
         sendResponse(exchange, 200, json);
     }
 
-    private void handle_UpdateCoupon(HttpExchange exchange, String body) throws IOException {
+    private void handle_UpdateCoupon(HttpExchange exchange, String token) throws IOException {
         Gson gson = new Gson();
-        Headers headers = exchange.getRequestHeaders();
-        String authHeader = headers.getFirst("Authorization");
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new UnauthorizedException("Unauthorized");
-        }
-
-        String token = authHeader.substring(7);
         String phone = JwtUtil.validateToken(token);
 
         var user = UserDao.getByPhone(phone);
         if (!(user instanceof Admin)) {
             throw new ForbiddenException("Forbidden");
         }
+        String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
+
 
         String path = exchange.getRequestURI().getPath();
         Long couponId = Long.parseLong(path.substring(path.lastIndexOf("/") + 1));
 
-        CouponDto CouponDto = gson.fromJson(body, CouponDto.class);
+        CouponDto CouponDto = gson.fromJson(requestBody, CouponDto.class);
 
-        Coupon updated = new Coupon();
-        updated.setId(couponId);
+
+        Coupon updated = CouponDao.findByCouponId(couponId);
         updated.setCouponCode(CouponDto.getCoupon_code());
         updated.setType(Coupon.Type.valueOf(CouponDto.getType()));
         updated.setValue(CouponDto.getValue());
@@ -259,6 +243,7 @@ public class adminHandler implements HttpHandler {
         updated.setUserCount(CouponDto.getUser_count());
         updated.setStartDate(LocalDate.parse(CouponDto.getStart_date()));
         updated.setEndDate(LocalDate.parse(CouponDto.getEnd_date()));
+        System.out.println(updated.getId());
 
         boolean success = CouponDao.update(updated);
         if (!success) {
@@ -337,7 +322,7 @@ public class adminHandler implements HttpHandler {
         String path = exchange.getRequestURI().getPath();
         Long couponId = Long.parseLong(path.substring(path.lastIndexOf("/") + 1));
 
-        Coupon coupon = CouponDao.getByCode(couponId);
+        Coupon coupon = CouponDao.findByCouponId(couponId);
         if (coupon == null) {
             throw new NotFoundException("Coupon not found");
         }
@@ -422,9 +407,11 @@ public class adminHandler implements HttpHandler {
 
     private void handleLogin(HttpExchange exchange, String body) throws IOException {
         try {
+
             Gson gson = new Gson();
             UserHandeler.LoginDto loginDto = gson.fromJson(body, UserHandeler.LoginDto.class);
             User user = UserDao.login(loginDto.phone, loginDto.password);
+            System.out.println(user.getId());
             if (user != null) {
                 if (user instanceof Admin) {
                     String token = JwtUtil.generateToken(loginDto.phone);

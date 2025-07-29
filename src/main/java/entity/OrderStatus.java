@@ -1,6 +1,7 @@
 package entity;
 
 public enum OrderStatus {
+    NON_SUBMITTED,
     SUBMITTED,
     UNPAID_AND_CANCELLED,
     WAITING_VENDOR,

@@ -33,15 +33,23 @@ public class CourierHandler implements HttpHandler {
             String token = authHeader.substring(7);
             if(method.equals("GET")) {
                 if(path.equals("/deliveries/available")) {
+                    System.out.println(515151515);
                     GetAvailableRequests(exchange,token);
                 }
-                else if(path.equals("/deliveries/history")) {
+                else{
+                    throw new NotFoundException("path not found");
+                }
+            }else if(method.equals("POST")) {
+                if(path.equals("/deliveries/history")) {
                     GetHistory(exchange,token);
-                }else{
+                }else if(path.equals("/deliveries/orders")){
+                    GetMyOrders(exchange,token);
+                }
+                else{
                     throw new NotFoundException("path not found");
                 }
             }
-            else if(method.equals("PATCH")) {
+            else if(method.equals("PUT")) {
                 if(path.matches("/deliveries/\\d+")) {
                     String[] pathParts = path.split("/");
                     long order_id = Long.parseLong(pathParts[2]);
@@ -79,9 +87,12 @@ public class CourierHandler implements HttpHandler {
             throw new UnauthorizedException("Unauthorized");
         }
         List<Order> orders= CourierService.GetaVailableRequests(phone);
+        System.out.println(orders.size());
         JSONArray array = new JSONArray();
         for(Order order : orders){
-            array.put(OrderService.convertOrderToJson(order));
+            if(order.getStatus() != OrderStatus.NON_SUBMITTED){
+                array.put(OrderService.convertOrderToJson(order));
+            }
         }
         sendResponse(exchange,200,array.toString());
     }
@@ -107,9 +118,42 @@ public class CourierHandler implements HttpHandler {
         if(phone == null){
             throw new UnauthorizedException("Unauthorized");
         }
+        User user = UserDao.getByPhone(phone);
+        if(user == null){
+            throw new UnauthorizedException("Unauthorized");
+        }
+        if(!(user instanceof Courier)){
+            throw new ForbiddenException("Forbidden");
+        }
         String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
         JSONObject jsonObject = new JSONObject(requestBody);
         Set<Order> orders=CourierService.GetHistory(phone,jsonObject);
+        JSONArray array = new JSONArray();
+        for(Order order : orders){
+            if(order.getStatus() != OrderStatus.NON_SUBMITTED){
+                array.put(OrderService.convertOrderToJson(order));
+            }
+        }
+        sendResponse(exchange,200,array.toString());
+    }
+
+    private void GetMyOrders(HttpExchange exchange,String token) throws IOException {
+        String phone = JwtUtil.validateToken(token);
+        if(phone == null){
+            throw new UnauthorizedException("Unauthorized");
+        }
+        User user = UserDao.getByPhone(phone);
+        if(user == null){
+            throw new UnauthorizedException("Unauthorized");
+        }
+        if(!(user instanceof Courier)){
+            throw new ForbiddenException("Forbidden");
+        }
+        String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
+        JSONObject jsonObject = new JSONObject(requestBody);
+        String status = jsonObject.getString("status");
+        OrderStatus orderStatus = OrderStatus.valueOf(status);
+        List<Order> orders = OrderDao.GetCourierOrders(user.getId(),orderStatus);
         JSONArray array = new JSONArray();
         for(Order order : orders){
             array.put(OrderService.convertOrderToJson(order));

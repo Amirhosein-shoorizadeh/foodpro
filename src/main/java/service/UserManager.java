@@ -47,12 +47,11 @@ public class UserManager {
 
     public static UserProfileDto GetCurrentProfile(String phone) {
         User user = UserDao.getByPhone(phone);
-        System.out.println(user.getBankinfo().toString() + "1");
         if (user == null) {
             throw new InvalidUserDataException("User not found.");
         } else {
 
-            return new UserProfileDto(user.getId(), user.getFull_name(), user.getPhone(), user.getEmail(), user.getClass().getSimpleName(), user.getAddress(), user.getProfileImageBase64(), user.getBankinfo());
+            return new UserProfileDto(user.getId(), user.getFull_name(), user.getPhone(), user.getEmail(), user.getClass().getSimpleName().toLowerCase(), user.getAddress(), user.getProfileImageBase64(), user.getBankinfo());
         }
     }
 
@@ -69,6 +68,7 @@ public class UserManager {
             user.setProfileImageBase64(profileDto.profileImageBase64);
             user.setAddress(profileDto.address);
             user.setBankinfo(profileDto.bank_info);
+            user.setPhone(profileDto.phone);
         }
         UserDao.update(user);
     }

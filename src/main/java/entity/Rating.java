@@ -22,11 +22,11 @@ public class Rating {
     @Column
     private String comment;
 
-    @ElementCollection // برای ذخیره لیست به عنوان مجموعه‌ای از مقادیر
+    @ElementCollection(fetch = FetchType.EAGER) // برای ذخیره لیست به عنوان مجموعه‌ای از مقادیر
     @Column(name = "logobase64") // نام ستون برای لیست
     private List<String> logobase64 = new ArrayList<>(); // تغییر از String به List<String> با مقدار پیش‌فرض
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false, unique = true)
     private Order order;
 
@@ -94,6 +94,14 @@ public class Rating {
 
     public void setLogobase64(List<String> logobase64) { // به‌روز کردن ستر
         this.logobase64 = logobase64;
+    }
+
+    public Order getOrder() {
+        return order;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
     }
 
     public Rating(long order_Id, String comment, long rate, List<String> logobase64) { // به‌روز کردن سازنده

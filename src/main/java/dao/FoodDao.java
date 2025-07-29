@@ -52,10 +52,18 @@ public class FoodDao {
         }
     }
 
-    public static List<Food> searchFoods(String search, long priceLimit, List<String> keywords) {
+    public static List<Food> searchFoods(String search, double priceLimit, List<String> keywords, int page, int pageSize) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             StringBuilder hql = new StringBuilder("SELECT DISTINCT f FROM Food f ");
-            boolean hasKeywords = keywords != null && !keywords.isEmpty();
+            boolean hasKeywords = false;
+            if (keywords != null) {
+                for (String k : keywords) {
+                    if (!k.trim().isEmpty()) {
+                        hasKeywords = true;
+                        break;
+                    }
+                }
+            }
             boolean hasSearch = search != null && !search.trim().isEmpty();
             boolean hasPrice = priceLimit > 0;
 
@@ -74,11 +82,11 @@ public class FoodDao {
             }
 
             if (hasPrice) {
-                conditions.add("f.price < :priceLimit");
+                conditions.add("f.price <= :priceLimit");
             }
 
             if (!conditions.isEmpty()) {
-                hql.append("WHERE ").append(String.join(" OR ", conditions));
+                hql.append("WHERE ").append(String.join(" AND ", conditions));
             }
 
             Query<Food> query = session.createQuery(hql.toString(), Food.class);
@@ -96,8 +104,31 @@ public class FoodDao {
                 query.setParameter("priceLimit", priceLimit);
             }
 
+            int firstResult = (page - 1) * pageSize;
+            query.setFirstResult(firstResult);
+            query.setMaxResults(pageSize);
+
             return query.getResultList();
         }
     }
+
+    public static List<Food> getTopRatedFoods(int limit) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            String hql = """
+            select oi.food
+            from Rating r
+            join r.order o
+            join o.orderItems oi
+            group by oi.food.id
+            order by avg(r.Rate) desc
+        """;
+
+            return session.createQuery(hql, Food.class)
+                    .setMaxResults(limit)
+                    .list();
+        }
+    }
+
+
 
 }

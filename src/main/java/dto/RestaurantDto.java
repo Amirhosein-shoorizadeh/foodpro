@@ -3,13 +3,13 @@ package dto;
 import entity.Restaurant;
 
 public class RestaurantDto {
-    private long id;
-    private String name;
-    private String address;
-    private String phone;
-    private String logoBase64;
-    private int tax_fee;
-    private long additional_fee;
+    public long id;
+    public String name;
+    public String address;
+    public String phone;
+    public String logoBase64;
+    public int tax_fee;
+    public long additional_fee;
 
     public RestaurantDto() {}
     public RestaurantDto(Restaurant restaurant) {

@@ -9,6 +9,8 @@ import exception.NotFoundException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
 
@@ -40,12 +42,18 @@ public class CourierService {
                 if(order.getStatus() == OrderStatus.FINDING_COURIER){
                     order.setStatus(OrderStatus.ACCEPTED_BY_COURIER);
                     order.setCourier(courier);
+
+
+                    order.setUpdatedAt(LocalDateTime.now());
                 }else{
                     throw new ForbiddenException("This order is not in the correct stage");
                 }
             }else if (status.equalsIgnoreCase("received")){
                 if(order.getStatus() == OrderStatus.ACCEPTED_BY_COURIER){
                     order.setStatus(OrderStatus.ON_THE_WAY);
+
+
+                    order.setUpdatedAt(LocalDateTime.now());
                 }else{
                     throw new ForbiddenException("This order is not in the correct stage");
                 }
@@ -53,6 +61,8 @@ public class CourierService {
             }else if(status.equalsIgnoreCase("delivered")){
                 if(order.getStatus() == OrderStatus.ON_THE_WAY){
                     order.setStatus(OrderStatus.COMPLETED);
+
+                    order.setUpdatedAt(LocalDateTime.now());
                 }else {
                     throw new ForbiddenException("This order is not in the correct stage");
                 }

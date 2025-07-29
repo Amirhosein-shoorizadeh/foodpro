@@ -5,8 +5,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import dto.FoodDto;
 import dto.RestaurantDto;
-import entity.Order;
-import entity.Restaurant;
+import entity.*;
 import exception.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -23,6 +22,8 @@ public class RestaurantHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
+
+
         try {
             String method = exchange.getRequestMethod();
             String path = exchange.getRequestURI().getPath();
@@ -34,40 +35,61 @@ public class RestaurantHandler implements HttpHandler {
             if (method.equals("GET")) {
                 if(path.equals("/restaurants/mine")) {
                     GetListRestaurant(exchange,token);
-                }else if(path.matches("/restaurants/\\d+/orders")) {
+                }else if(path.matches("/restaurants/\\d+/item") && path.split("/")[3].equals("item")){
+                    System.out.println(1);
                     String[] pathParts = path.split("/");
                     long restaurantId = Long.parseLong(pathParts[2]);
-                    GetListOfOrders(exchange,restaurantId,token);
+                    GetFoodsOfRestaurant(exchange,restaurantId,token);
+                    System.out.println(2);
+                }else if(path.matches("/restaurants/\\d+/menu") && path.split("/")[3].equals("menu")) {
+                    String[] pathParts = path.split("/");
+                    long restaurantId = Long.parseLong(pathParts[2]);
+                    GenMenu(exchange,restaurantId,token);
+                }else if(path.matches("/restaurants/\\d+/menu/.+") && path.split("/").length == 5){
+                    String[] pathParts = path.split("/");
+                    long restaurantId = Long.parseLong(pathParts[2]);
+                    String title = pathParts[4];
+                    GetFoodsForMenu(exchange,restaurantId,title,token);
                 }
             }
             else if (method.equals("POST")) {
                 if (path.equals("/restaurants")) {
                     CreateRestaurant(exchange,token);
-                }else if(path.matches("/restaurants/\\d+/item")) {
+                }else if(path.matches("/restaurants/\\d+/item") && path.split("/")[3].equals("item")) {
                     String[] pathParts = path.split("/");
                     long id = Long.parseLong(pathParts[2]);
                     AddFoodToRestaurant(exchange, id,token);
-                }else if(path.matches("/restaurants/\\d+/menu")) {
+                }else if(path.matches("/restaurants/\\d+/menu") && path.split("/")[3].equals("menu")) {
                     String[] pathParts = path.split("/");
                     long id = Long.parseLong(pathParts[2]);
                     AddMenu(exchange, id,token);
+                }else if(path.matches("/restaurants/\\d+/orders") && path.split("/")[3].equals("orders")) {
+                    String[] pathParts = path.split("/");
+                    long restaurantId = Long.parseLong(pathParts[2]);
+                    GetListOfOrders(exchange,restaurantId,token);
+
                 }
             }
             else if (method.equals("PUT")) {
-                if (path.matches("/restaurants/\\d+")) {
+                if (path.matches("/restaurants/\\d+") && path.split("/").length == 3) {
                     String[] pathParts = path.split("/");
                     long id = Long.parseLong(pathParts[pathParts.length - 1]);
                     UpdateRestaurant(exchange, id,token);
-                }else if(path.matches("/restaurants/\\d+/item/\\d+")) {
+                }else if(path.matches("/restaurants/\\d+/item/\\d+") && path.split("/")[3].equals("item")) {
                     String[] pathParts = path.split("/");
                     long restaurantId = Long.parseLong(pathParts[2]);
                     long foodId = Long.parseLong(pathParts[4]);
                     UpdateFood(exchange, restaurantId, foodId,token);
-                }else if(path.matches("/restaurants/\\d+/menu/.+")) {
+                }else if(path.matches("/restaurants/\\d+/menu/.+") && path.split("/")[3].equals("menu")) {
                     String[] pathParts = path.split("/");
                     long restaurantId = Long.parseLong(pathParts[2]);
                     String title = pathParts[4];
                     AddFoodToMenu(exchange, restaurantId, title,token);
+                }else if (path.matches("/restaurants/orders/\\d+") && path.split("/")[2].equals("orders")) {
+                    String[] pathParts = path.split("/");
+                    long OrderId = Long.parseLong(pathParts[3]);
+                    System.out.println(49494949);
+                    ChangeStatusOfOrder(exchange, OrderId,token);
                 }
             }
             else if (method.equals("DELETE")) {
@@ -89,14 +111,7 @@ public class RestaurantHandler implements HttpHandler {
                     long foodId = Long.parseLong(pathParts[5]);
                     DeleteFoodFromMenu(exchange,restaurantId,title,foodId,token);
                 }
-            }else if(method.equals("PATCH")) {
-                if (path.equals("/restaurants/orders/\\d+")) {
-                    String[] pathParts = path.split("/");
-                    long OrderId = Long.parseLong(pathParts[3]);
-                    ChangeStatusOfOrder(exchange, OrderId,token);
-                }
-            }
-            else{
+            } else{
                 throw new NotFoundException("Not found method");
             }
         }catch (UnauthorizedException e){
@@ -134,7 +149,7 @@ public class RestaurantHandler implements HttpHandler {
         restaurantDto.setId(id);
 
         String responseJson = gson.toJson(restaurantDto,RestaurantDto.class);
-        sendResponse(exchange, 201, responseJson);
+        sendResponse(exchange, 200, responseJson);
 
     }
 
@@ -213,12 +228,18 @@ public class RestaurantHandler implements HttpHandler {
 
     private void AddMenu(HttpExchange exchange,long restaurant_id,String token) throws IOException {
 
+
         String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
         String phone = JwtUtil.validateToken(token);
 
+
         JSONObject json = new JSONObject(requestBody);
+
         String title = json.getString("title");
+
+        System.out.println(title);
         RestaurantService.AddMenu(phone,restaurant_id,title);
+
         sendResponse(exchange, 200,"{\"title\": \"" + title+ "\"}");
     }
     private void DeleteMenu(HttpExchange exchange,long restaurant_id,String title,String token) throws IOException {
@@ -239,9 +260,7 @@ public class RestaurantHandler implements HttpHandler {
     }
     private void DeleteFoodFromMenu(HttpExchange exchange,long restaurant_id,String title,long food_id,String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
-        System.out.println(888);
 
-        System.out.println(5555);
         RestaurantService.DeleteFoodFromMenu(phone,restaurant_id,food_id,title);
         sendResponse(exchange, 200,"{\"message\": \"Item removed from restaurant menu successfully\"}" );
     }
@@ -250,29 +269,80 @@ public class RestaurantHandler implements HttpHandler {
 
         String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
         JSONObject jsonObject = new JSONObject(requestBody);
+
         Set<Order> orders =RestaurantService.GetListOfOrder(phone,restaurant_id,jsonObject);
         JSONArray array = new JSONArray();
         for(Order order : orders){
-            array.put(OrderService.convertOrderToJson(order));
+            if(order.getStatus() != OrderStatus.NON_SUBMITTED){
+                array.put(OrderService.convertOrderToJson(order));
+            }
         }
         sendResponse(exchange,200,array.toString());
     }
 
     private void ChangeStatusOfOrder(HttpExchange exchange,long order_id,String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
+        System.out.println(999999);
 
         String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
         JSONObject jsonObject = new JSONObject(requestBody);
         String status = jsonObject.getString("status");
+        System.out.println(status);
         RestaurantService.ChangeStatusOfOrder(phone,order_id,status);
         sendResponse(exchange, 200,"{\"message\": \"" + "Order status changed successfully" + "\"}");
     }
 
-
-    public static class RatingHandler implements HttpHandler {
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-
+    private void GetFoodsOfRestaurant(HttpExchange exchange,long restaurant_id,String token) throws IOException {
+        String phone = JwtUtil.validateToken(token);
+        List<Food> foods = RestaurantService.GetFoodsOfRestaurant(phone,restaurant_id);
+        JSONArray array = new JSONArray();
+        for(Food food : foods){
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("id",food.getId());
+            jsonObject.put("name",food.getName());
+            jsonObject.put("price",food.getPrice());
+            jsonObject.put("vendor_id",restaurant_id);
+            jsonObject.put("description",food.getDescription());
+            jsonObject.put("imageBase64",food.getImageBase64());
+            jsonObject.put("supply",food.getSupply());
+            System.out.println(food.getSupply() + 1);
+            jsonObject.put("keywords", new JSONArray(food.getKeywords()));
+            array.put(jsonObject);
         }
+
+        sendResponse(exchange,200,array.toString());
     }
+
+     private void GenMenu(HttpExchange exchange,long restaurant_id,String token) throws IOException {
+        String phone = JwtUtil.validateToken(token);
+        List<Menu> menus = RestaurantService.GetMenu(phone,restaurant_id);
+        JSONArray array = new JSONArray();
+        for(Menu menu : menus){
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("id",menu.getId());
+            jsonObject.put("title",menu.getTitle());
+            array.put(jsonObject);
+        }
+        sendResponse(exchange,200,array.toString());
+     }
+     private void GetFoodsForMenu(HttpExchange exchange,long restaurant_id,String title,String token) throws IOException {
+        String phone = JwtUtil.validateToken(token);
+        Set<Food> foods = RestaurantService.GetFoodsForMenu(phone,restaurant_id,title);
+        JSONArray array = new JSONArray();
+        for(Food food : foods){
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("id",food.getId());
+            jsonObject.put("name",food.getName());
+            jsonObject.put("price",food.getPrice());
+            jsonObject.put("vendor_id",restaurant_id);
+            jsonObject.put("description",food.getDescription());
+            jsonObject.put("imageBase64",food.getImageBase64());
+            jsonObject.put("keywords", new JSONArray(food.getKeywords()));
+            array.put(jsonObject);
+        }
+        sendResponse(exchange,200,array.toString());
+     }
+
+
+
 }

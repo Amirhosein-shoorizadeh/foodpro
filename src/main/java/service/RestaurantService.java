@@ -4,10 +4,17 @@ import dto.FoodDto;
 import dto.RestaurantDto;
 import entity.*;
 import exception.*;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.json.JSONArray;
 import org.json.JSONObject;
+import util.HibernateUtil;
 import util.JwtUtil;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -184,18 +191,11 @@ public class RestaurantService {
             RestaurantDao.update(restaurant);
         }
     }
-    public static void DeleteMenu(String SellerPhone,long restaurantId,String title){
-        if(canModifyRestaurant(SellerPhone,restaurantId)){
-            Restaurant restaurant = RestaurantDao.getById(restaurantId);
-            Menu menu = MenuDao.getMenu(restaurantId,title);
-            if(menu == null){
-                throw new NotFoundException("Menu not found");
-            }
-            restaurant.removeMenu(menu);
-            MenuDao.delete(menu);
-            RestaurantDao.update(restaurant);
-        }
+    public static void DeleteMenu(String sellerPhone, long restaurantId, String title) {
+        if (!canModifyRestaurant(sellerPhone, restaurantId)) return;
+         MenuDao.delete(restaurantId, title);
     }
+
 
     public static void AddFoodToMenu(String SellerPhone,long restaurantId,long foodId,String title){
         if(canModifyRestaurant(SellerPhone,restaurantId)){
@@ -210,9 +210,10 @@ public class RestaurantService {
             if(menu == null){
                 throw new NotFoundException("Menu not found");
             }
-            menu.addFood(food);
-            FoodDao.update(food);
-            MenuDao.update(menu);
+            if (!menu.getFoods().contains(food)) {
+                menu.addFood(food);
+                MenuDao.update(menu); // فقط menu رو update کن
+            }
         }
     }
 
@@ -246,14 +247,27 @@ public class RestaurantService {
 
 
     public static Set<Order> GetListOfOrder(String SellerPhone,long restaurantId,JSONObject jsonObject){
+        System.out.println(3333);
         if(canModifyRestaurant(SellerPhone,restaurantId)){
+            System.out.println(4444);
             Restaurant restaurant = RestaurantDao.getById(restaurantId);
+            System.out.println(restaurantId);
             String Status = jsonObject.optString("status",null);
+            System.out.println(5);
             String Search = jsonObject.optString("search",null);
+            System.out.println(5);
             String user = jsonObject.optString("user",null);
+            System.out.println(5);
             String courier = jsonObject.optString("courier",null);
-            OrderStatus orderStatus = OrderStatus.valueOf(Status.toUpperCase());
-            Set<Order> orders = OrderDao.RestaurantSearchOrders(restaurantId,orderStatus,Search,user,courier);
+            System.out.println(5);
+            System.out.println(Status);
+            System.out.println(Search);
+            System.out.println(user);
+            System.out.println(courier);
+            Set<Order> orders = OrderDao.RestaurantSearchOrders(restaurantId,Status,Search,user,courier);
+            for(Order order:orders){
+                System.out.println(order.getId());
+            }
             return orders;
         }
         return null;
@@ -274,17 +288,23 @@ public class RestaurantService {
         }
         Restaurant restaurant = order.getRestaurant();
         List<OrderItem> orderItems = order.getOrderItems();
+
         if(canModifyRestaurant(SellerPhone,restaurant.getId())){
 
             if(status.equals("accepted")){
                 if( order.getStatus() == OrderStatus.SUBMITTED){
                     order.setStatus(OrderStatus.WAITING_VENDOR);
+
+                    order.setUpdatedAt(LocalDateTime.now());
                 }else {
                     throw new ForbiddenException("This order is not in the correct stage");
                 }
             }else if(status.equals("rejected")){
                 if(order.getStatus() == OrderStatus.SUBMITTED){
                     order.setStatus(OrderStatus.CANCELLED);
+
+                    order.setUpdatedAt(LocalDateTime.now());
+
                     double balance = order.getPayPrice();
                     Buyer buyer = order.getBuyer();
                     buyer.getBankinfo().increaseWalletBalance(balance);
@@ -300,6 +320,8 @@ public class RestaurantService {
             }else if(status.equals("served")){
                 if(order.getStatus() == OrderStatus.WAITING_VENDOR){
                     order.setStatus(OrderStatus.FINDING_COURIER);
+
+                    order.setUpdatedAt(LocalDateTime.now());
                 }else {
                     throw new ForbiddenException("This order is not in the correct stage");
                 }
@@ -310,6 +332,34 @@ public class RestaurantService {
             OrderDao.update(order);
         }
 
+    }
+
+    public static List<Food> GetFoodsOfRestaurant(String SellerPhone,long restaurantId){
+        if(canModifyRestaurant(SellerPhone,restaurantId)){
+            Restaurant restaurant = RestaurantDao.getById(restaurantId);
+            return restaurant.getFoods();
+        }
+        return null;
+    }
+    public static List<Menu> GetMenu(String SellerPhone,long restaurantId){
+        if(canModifyRestaurant(SellerPhone,restaurantId)){
+            Restaurant restaurant = RestaurantDao.getById(restaurantId);
+            List<Menu> menus = restaurant.getMenus();
+            return menus;
+        }
+        return null;
+    }
+    public static Set<Food> GetFoodsForMenu(String SellerPhone,long restaurantId,String title){
+        if(canModifyRestaurant(SellerPhone,restaurantId)){
+            Restaurant restaurant = RestaurantDao.getById(restaurantId);
+            List<Menu> menus = restaurant.getMenus();
+            for(Menu menu : menus){
+                if(menu.getTitle().equals(title)){
+                    return menu.getFoods();
+                }
+            }
+        }
+        return null;
     }
 
 

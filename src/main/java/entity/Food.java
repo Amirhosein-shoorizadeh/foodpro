@@ -28,7 +28,7 @@ public class Food {
 
 
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "keywords", joinColumns = @JoinColumn(name = "food_id"))
     @Column(name = "keywords")
     private List<String> keywords = new ArrayList<>();
@@ -41,6 +41,11 @@ public class Food {
 
     @ManyToMany(mappedBy = "foods",cascade = {CascadeType.PERSIST, CascadeType.MERGE},fetch = FetchType.EAGER)
     private Set<Menu> menus = new HashSet<>();
+
+
+
+
+
 
 
 
@@ -133,13 +138,15 @@ public class Food {
         this.menus = menus;
     }
 
-
     public void MinusSupply(int number) {
         this.supply -= number;
     }
     public void PlusSupply(int number) {
         this.supply += number;
     }
+
+
+
 
     @Override
     public boolean equals(Object o) {
