@@ -50,7 +50,9 @@ public class UserHandeler implements HttpHandler {
         } else if ("GET".equalsIgnoreCase(method)) {
             if (path.equals("/auth/profile")) {
                 GetCurrentProfile(exchange);
-            } else {
+            } else if(path.equals("/auth/approved")) {
+                isApproved(exchange);
+            }else {
                 sendResponse(exchange, 404, "Path not found");
             }
         } else if ("PUT".equalsIgnoreCase(method)) {
@@ -73,7 +75,7 @@ public class UserHandeler implements HttpHandler {
                 String token = JwtUtil.generateToken(temp.phone);
                 Token tokenEntity = new Token(token, temp.phone, JwtUtil.getExpirationDate(token), JwtUtil.getExpirationDate(token), false);
                 TokenDao.save(tokenEntity);
-                SignupResponseDto signtemp = new SignupResponseDto("registered successfullyl", userId, token);
+                SignupResponseDto signtemp = new SignupResponseDto("registered successfullyl", userId, token,temp.role);
                 String json = gson.toJson(signtemp);
                 sendResponse(exchange, 200, json);
             }
@@ -96,7 +98,9 @@ public class UserHandeler implements HttpHandler {
                 String token = JwtUtil.generateToken(loginDto.phone);
                 Token tokenEntity = new Token(token, loginDto.phone, LocalDateTime.now(), JwtUtil.getExpirationDate(token), false);
                 TokenDao.save(tokenEntity);
-                sendResponse(exchange, 200, "{\"token\": \"" + token + "\"}");
+                SignupResponseDto signtemp = new SignupResponseDto("registered successfullyl", user.getId(), token,user.getClass().getSimpleName().toLowerCase());
+                String json = gson.toJson(signtemp);
+                sendResponse(exchange, 200, json);
             } else {
                 sendResponse(exchange, 401, "Invalid credentials");
             }
@@ -109,18 +113,37 @@ public class UserHandeler implements HttpHandler {
         }
     }
 
+    private void  isApproved(HttpExchange exchange) throws IOException {
+        try{
+            Headers hedders = exchange.getRequestHeaders();
+            String authHeader = hedders.getFirst("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                String phone = JwtUtil.validateToken(token);
+                sendResponse(exchange, 200, "ok");
+            } else {
+                throw new UnauthorizedException("Unauthorized");
+            }
+        }catch (UnauthorizedException e){
+            sendResponse(exchange, 401, e.getMessage());
+        }catch (NotApproved e){
+            sendResponse(exchange, 300, e.getMessage());
+        }catch (NotFoundException e){
+            sendResponse(exchange, 404, e.getMessage());
+        }
+        catch (Exception e){
+            sendResponse(exchange, 500, e.getMessage());
+        }
+    }
+
     private void handleLogout(HttpExchange exchange) throws IOException {
         Headers headers = exchange.getRequestHeaders();
         String authHeader = headers.getFirst("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
-            System.out.println(0);
             TokenDao.revoke(token);
-            System.out.println(1);
             Token tokenTemp = TokenDao.findByToken(token);
-            System.out.println(10);
             TokenDao.delete(tokenTemp);
-            System.out.println(12);
             sendResponse(exchange, 200, "{\"message\": \"Logged out successfully\"}");
         } else {
             sendResponse(exchange, 401, "{\"error\": \"Unauthorized\"}");
@@ -142,7 +165,10 @@ public class UserHandeler implements HttpHandler {
             throw new UnauthorizedException("Unauthorized");
             }
 
-        } catch (UnauthorizedException e) {
+        }catch (NotApproved e){
+
+        }
+        catch (UnauthorizedException e) {
             sendResponse(exchange, 401, "Unauthorized" + e.getMessage());
         } catch (InvalidUserDataException e) {
             sendResponse(exchange, 404, "{\"error\": \"" + e.getMessage() + "\"}");

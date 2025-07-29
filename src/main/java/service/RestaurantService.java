@@ -21,7 +21,7 @@ import java.util.Set;
 public class RestaurantService {
 
 
-    public static long createRestaurant(String token, RestaurantDto restaurantDto) {
+    public static long createRestaurant(String token, RestaurantDto restaurantDto) throws Exception {
         String sellerPhone = JwtUtil.validateToken(token);
         if (sellerPhone == null) {
             throw new UnauthorizedException("Unauthorized");
@@ -57,7 +57,7 @@ public class RestaurantService {
         return restaurant.getId();
     }
 
-    public static List<Restaurant> getSellerRestaurants(String token) {
+    public static List<Restaurant> getSellerRestaurants(String token) throws Exception {
 
         String sellerPhone = JwtUtil.validateToken(token);
         if (sellerPhone == null) {
@@ -75,7 +75,7 @@ public class RestaurantService {
     }
 
 
-    public static void UpdateRestaurant(String token,RestaurantDto restaurantDto)  {
+    public static void UpdateRestaurant(String token,RestaurantDto restaurantDto) throws Exception  {
         String sellerPhone = JwtUtil.validateToken(token);
         if (sellerPhone == null) {
             throw new UnauthorizedException("Unauthorized");

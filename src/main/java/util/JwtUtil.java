@@ -54,6 +54,10 @@ public class JwtUtil {
             }else  {
                 throw new NotApproved("Not approved");
             }
+        } catch (NotApproved e) {
+            throw e;
+        } catch (UnauthorizedException e) {
+            throw e;
         } catch (Exception e) {
             throw new UnauthorizedException(e.getMessage());
         }

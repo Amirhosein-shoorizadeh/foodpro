@@ -15,6 +15,8 @@ import util.JwtUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
 
@@ -49,7 +51,9 @@ public class RestaurantHandler implements HttpHandler {
                     String[] pathParts = path.split("/");
                     long restaurantId = Long.parseLong(pathParts[2]);
                     String title = pathParts[4];
-                    GetFoodsForMenu(exchange,restaurantId,title,token);
+                    String menuTitle = URLDecoder.decode(title, StandardCharsets.UTF_8);
+
+                    GetFoodsForMenu(exchange,restaurantId,menuTitle,token);
                 }
             }
             else if (method.equals("POST")) {
@@ -84,7 +88,9 @@ public class RestaurantHandler implements HttpHandler {
                     String[] pathParts = path.split("/");
                     long restaurantId = Long.parseLong(pathParts[2]);
                     String title = pathParts[4];
-                    AddFoodToMenu(exchange, restaurantId, title,token);
+                    String menuTitle = URLDecoder.decode(title, StandardCharsets.UTF_8);
+
+                    AddFoodToMenu(exchange, restaurantId, menuTitle,token);
                 }else if (path.matches("/restaurants/orders/\\d+") && path.split("/")[2].equals("orders")) {
                     String[] pathParts = path.split("/");
                     long OrderId = Long.parseLong(pathParts[3]);
@@ -102,19 +108,25 @@ public class RestaurantHandler implements HttpHandler {
                     String[] pathParts = path.split("/");
                     long restaurantId = Long.parseLong(pathParts[2]);
                     String title = pathParts[4];
-                    DeleteMenu(exchange, restaurantId, title,token);
+                    String menuTitle = URLDecoder.decode(title, StandardCharsets.UTF_8);
+
+                    DeleteMenu(exchange, restaurantId, menuTitle,token);
                 }else if(path.matches("/restaurants/\\d+/menu/.+/\\d+") && (path.split("/").length == 6)) {
                     System.out.println(6666);
                     String[] pathParts = path.split("/");
                     long restaurantId = Long.parseLong(pathParts[2]);
                     String title = pathParts[4];
+                    String menuTitle = URLDecoder.decode(title, StandardCharsets.UTF_8);
                     long foodId = Long.parseLong(pathParts[5]);
-                    DeleteFoodFromMenu(exchange,restaurantId,title,foodId,token);
+                    DeleteFoodFromMenu(exchange,restaurantId,menuTitle,foodId,token);
                 }
             } else{
                 throw new NotFoundException("Not found method");
             }
-        }catch (UnauthorizedException e){
+        }catch (NotApproved e){
+            sendResponse(exchange,300,"{\"error\": \"" + e.getMessage() + "\"}");
+        }
+        catch (UnauthorizedException e){
             sendResponse(exchange, 401, "{\"error\": \"" + e.getMessage() + "\"}");
         }catch (NotFoundException e){
             sendResponse(exchange, 404, "{\"error\": \"" + e.getMessage() + "\"}");
@@ -139,7 +151,7 @@ public class RestaurantHandler implements HttpHandler {
     }
 
 
-    private void CreateRestaurant(HttpExchange exchange,String token) throws IOException {
+    private void CreateRestaurant(HttpExchange exchange,String token) throws IOException,Exception {
 
         Gson gson = new Gson();
 
@@ -153,7 +165,7 @@ public class RestaurantHandler implements HttpHandler {
 
     }
 
-    private void GetListRestaurant(HttpExchange exchange,String token) throws IOException {
+    private void GetListRestaurant(HttpExchange exchange,String token) throws IOException,Exception {
         List<Restaurant> restaurants = RestaurantService.getSellerRestaurants(token);
         JSONArray response = new JSONArray();
         for (Restaurant restaurant : restaurants) {
@@ -170,7 +182,7 @@ public class RestaurantHandler implements HttpHandler {
         sendResponse(exchange, 200, response.toString());
     }
 
-    private void UpdateRestaurant(HttpExchange exchange,long restaurant_id,String token) throws IOException {
+    private void UpdateRestaurant(HttpExchange exchange,long restaurant_id,String token) throws IOException,Exception {
 
         Gson gson = new Gson();
 
