@@ -387,6 +387,7 @@ public class OrderHandler implements HttpHandler {
     }
 
     private void CheckCoupon(HttpExchange exchange,String token) throws IOException {
+        System.out.println(111112);
         String phone = JwtUtil.validateToken(token);
         User user = UserDao.getByPhone(phone);
         if(user != null){
@@ -397,6 +398,13 @@ public class OrderHandler implements HttpHandler {
                 long order_id = jsonObject.getLong("order_id");
                 Coupon coupon = CouponDao.getByCode(coupon_code);
                 Order order = OrderDao.getOrderById(order_id);
+                if(order.getCoupon() != null ){
+                    if(order.getCoupon().getCouponCode().equals(coupon_code)){
+                        throw new ForbiddenException("You have already used this coupon for this order.");
+                    }else{
+
+                    }
+                }
                 if(coupon != null){
                     if(order != null){
                         if(order.getPayPrice() >= coupon.getMinPrice() && coupon.getUserCount()>0){
@@ -408,7 +416,7 @@ public class OrderHandler implements HttpHandler {
                                 OrderDao.update(order);
                                 CouponDao.update(coupon);
                                 JSONObject response = new JSONObject();
-                                response.put("pay_price",order.getPayPrice());
+                                response.put("pay_price",order.getPayPrice()+"");
                                 response.put("coupon_id",coupon.getId());
                                 sendResponse(exchange, 200, response.toString());
 
