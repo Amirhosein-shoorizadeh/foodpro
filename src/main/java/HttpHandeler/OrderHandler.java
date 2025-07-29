@@ -63,6 +63,10 @@ public class OrderHandler implements HttpHandler {
                 }else if(path.equals("/orders/history")) {
                     System.out.println(9966996);
                     GetOrderHistory(exchange,token);
+                }else if(path.matches("/orders/delete/\\d+") && path.split("/")[2].equals("delete")) {
+                    String[] pathParts = path.split("/");
+                    long order_id = Long.parseLong(pathParts[3]);
+                    DeleteFoodFromCart(exchange,order_id,token);
                 }
                 else {throw new NotFoundException("Not Found PATH");}
             }else {throw new NotFoundException("Not Found Method");}
@@ -285,6 +289,87 @@ public class OrderHandler implements HttpHandler {
         } else throw new NotFoundException("Not Found User");
     }
 
+    private void DeleteFoodFromCart(HttpExchange exchange,long order_id,String token) throws IOException {
+        String phone = JwtUtil.validateToken(token);
+        User user = UserDao.getByPhone(phone);
+        System.out.println(1111);
+        if(user != null){
+            if(user instanceof Buyer){
+                Buyer buyer = (Buyer)user;
+                System.out.println(2222);
+
+                String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
+                JSONObject jsonObject = new JSONObject(requestBody);
+                long food_id = jsonObject.getLong("food_id");
+                int quantity = jsonObject.getInt("quantity");
+                Food food = FoodDao.getFoodById(food_id);
+                Order order = OrderDao.getOrderById(order_id);
+                System.out.println(33333);
+                if(order != null){
+                    List<OrderItem> orderItems = order.getOrderItems();
+                    OrderItem oI = null;
+                    System.out.println(4444);
+                    for(OrderItem orderItem : orderItems){
+                        if(orderItem.getFood().getId() == food.getId() && orderItem.getQuantity() == quantity){
+                            oI = orderItem;
+                            System.out.println(5555);
+                            food.PlusSupply(quantity);
+                            FoodDao.update(food);
+                            System.out.println(6666);
+                            double raw_price = order.getRawPrice();
+                            order.setRawPrice((long) (raw_price-(food.getPrice()*quantity)));
+                            order.calculatePayPrice();
+                            System.out.println(7777);
+                            break;
+                        }
+                    }
+
+                    if(oI != null){
+                        order.getOrderItems().remove(oI);
+                    }
+                    if(order.getOrderItems().isEmpty()){
+                        System.out.println(8888);
+                        OrderDao.delete(order);
+                        System.out.println(9999);
+                        JSONObject jsonObject1 = new JSONObject();
+                        jsonObject1.put("delete", "success");
+                        sendResponse(exchange, 200,jsonObject1.toString());
+                        System.out.println(10000);
+                        return;
+                    }
+                    System.out.println(14141);
+                    Coupon coupon = order.getCoupon();
+                    if(coupon != null){
+                        if(order.getPayPrice() >= coupon.getMinPrice() && coupon.getUserCount()>0){
+                            LocalDate nowDate = LocalDate.now();
+                            if((nowDate.isAfter(coupon.getStartDate()) && nowDate.isBefore(coupon.getEndDate())) || (nowDate.isEqual(coupon.getStartDate()) || nowDate.isEqual(coupon.getEndDate())) ){
+                                order.calculatePayPrice();
+                                CouponDao.update(coupon);
+                            }
+                            else {
+                             order.setCoupon(null);
+                             int user_count = coupon.getUserCount();
+                             coupon.setUserCount(user_count + 1);
+                             CouponDao.update(coupon);
+                            }
+                        }else {
+                            order.setCoupon(null);
+                            int user_count = coupon.getUserCount();
+                            coupon.setUserCount(user_count + 1);
+                            CouponDao.update(coupon);
+                        }
+                    }
+                    System.out.println(12121212);
+                    OrderDao.update(order);
+                    System.out.println(131313);
+                    JSONObject response = OrderService.convertOrderToJson(order);
+                    sendResponse(exchange, 200, response.toString());
+                }else throw  new ForbiddenException("Forbidden");
+            }else throw  new ForbiddenException("Forbidden");
+        }else throw new UnauthorizedException("Unauthorized");
+
+    }
+
     private void GetCartsOfBuyer(HttpExchange exchange,String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
         User user = UserDao.getByPhone(phone);
@@ -314,7 +399,7 @@ public class OrderHandler implements HttpHandler {
                 Order order = OrderDao.getOrderById(order_id);
                 if(coupon != null){
                     if(order != null){
-                        if(order.getPayPrice() > coupon.getMinPrice() && coupon.getUserCount()>0){
+                        if(order.getPayPrice() >= coupon.getMinPrice() && coupon.getUserCount()>0){
                             LocalDate nowDate = LocalDate.now();
                             if((nowDate.isAfter(coupon.getStartDate()) && nowDate.isBefore(coupon.getEndDate())) || (nowDate.isEqual(coupon.getStartDate()) || nowDate.isEqual(coupon.getEndDate())) ){
                                 order.setCoupon(coupon);

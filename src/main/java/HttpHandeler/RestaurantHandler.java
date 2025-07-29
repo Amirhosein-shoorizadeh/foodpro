@@ -294,10 +294,7 @@ public class RestaurantHandler implements HttpHandler {
 
     private void GetFoodsOfRestaurant(HttpExchange exchange,long restaurant_id,String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
-        System.out.println(3);
         List<Food> foods = RestaurantService.GetFoodsOfRestaurant(phone,restaurant_id);
-        System.out.println(foods.size());
-        System.out.println(4);
         JSONArray array = new JSONArray();
         for(Food food : foods){
             JSONObject jsonObject = new JSONObject();
@@ -307,13 +304,15 @@ public class RestaurantHandler implements HttpHandler {
             jsonObject.put("vendor_id",restaurant_id);
             jsonObject.put("description",food.getDescription());
             jsonObject.put("imageBase64",food.getImageBase64());
-            System.out.println(food.getKeywords().size());
+            jsonObject.put("supply",food.getSupply());
+            System.out.println(food.getSupply() + 1);
             jsonObject.put("keywords", new JSONArray(food.getKeywords()));
             array.put(jsonObject);
         }
 
         sendResponse(exchange,200,array.toString());
     }
+
      private void GenMenu(HttpExchange exchange,long restaurant_id,String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
         List<Menu> menus = RestaurantService.GetMenu(phone,restaurant_id);
