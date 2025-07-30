@@ -14,7 +14,7 @@ import java.util.List;
 
 
 public class UserDao {
-    private static final Object lock = new Object(); // قفل اختصاصی
+    private static final Object lock = new Object();
 
     public static boolean save(User user) {
         synchronized (lock) {

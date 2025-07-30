@@ -33,12 +33,14 @@ public class PaymentTransactionDao {
     public static Set<PaymentTransaction> GetTransactionSet(String searchFood,String buyerKeyword,String methodKeyword,String statusKeyword) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             StringBuilder jpql = new StringBuilder("""
-            SELECT DISTINCT pt FROM PaymentTransaction pt
-            JOIN pt.buyer b
-            JOIN pt.order o
-            JOIN o.foods f
-            WHERE 1=1
-        """);
+    SELECT DISTINCT pt
+    FROM PaymentTransaction pt
+    LEFT JOIN pt.buyer b
+    LEFT JOIN pt.order o
+     LEFT JOIN o.orderItems oi
+     LEFT JOIN oi.food f
+     WHERE 1=1
+""");
 
             if (searchFood != null && !searchFood.isBlank()) {
                 jpql.append(" AND REPLACE(LOWER(f.name), ' ', '') LIKE :foodKw ");
@@ -47,10 +49,10 @@ public class PaymentTransactionDao {
                 jpql.append(" AND REPLACE(LOWER(b.full_name), ' ', '') LIKE :buyerKw ");
             }
             if (methodKeyword != null && !methodKeyword.isBlank()) {
-                jpql.append(" AND LOWER(pt.method) = :methodKw ");
+                jpql.append(" AND pt.method = :methodKw ");
             }
             if (statusKeyword != null && !statusKeyword.isBlank()) {
-                jpql.append(" AND LOWER(pt.status) = :statusKw ");
+                jpql.append(" AND pt.status = :statusKw ");
             }
 
             Query<PaymentTransaction> query = session.createQuery(jpql.toString(), PaymentTransaction.class);

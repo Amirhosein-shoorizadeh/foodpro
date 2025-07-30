@@ -93,6 +93,7 @@ public class adminHandler implements HttpHandler {
         } catch (NotFoundException e) {
             sendResponse(exchange, 404, "Not Found");
         } catch (Exception e) {
+            e.printStackTrace();
             sendResponse(exchange, 500, "Internal Server Error");
         }
     }
@@ -317,14 +318,8 @@ public class adminHandler implements HttpHandler {
         sendResponse(exchange, 200, json);
     }
 
-    private void AdminSearchOrder(HttpExchange exchange, String body) throws IOException {
-        Headers headers = exchange.getRequestHeaders();
-        String authHeader = headers.getFirst("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new UnauthorizedException("Unauthorized");
-        }
+    private void AdminSearchOrder(HttpExchange exchange, String token) throws IOException {
 
-        String token = authHeader.substring(7);
         String phone = JwtUtil.validateToken(token);
         if (phone == null) {
             throw new UnauthorizedException("Unauthorized");
@@ -334,56 +329,71 @@ public class adminHandler implements HttpHandler {
         if (!(user instanceof Admin)) {
             throw new ForbiddenException("Forbidden");
         }
+        String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
 
-        JSONObject jsonObject = new JSONObject(body);
+        JSONObject jsonObject = new JSONObject(requestBody);
         String Search = jsonObject.optString("search", null);
         String Vendor = jsonObject.optString("vendor", null);
         String Courier = jsonObject.optString("courier", null);
         String Customer = jsonObject.optString("customer", null);
         String Status = jsonObject.optString("status", null);
-        OrderStatus orderStatus = OrderStatus.valueOf(Status.toUpperCase());
-        Set<Order> orders = OrderDao.AdminSearchOrders(Vendor, orderStatus, Search, Customer, Courier);
+        System.out.println(Search);
+        System.out.println(Vendor);
+        System.out.println(Courier);
+        System.out.println(Customer);
+        System.out.println(Status);
+
+
+        Set<Order> orders = OrderDao.AdminSearchOrders(Vendor,Status, Search, Customer, Courier);
+        System.out.println(orders.size());
         JSONArray jsonArray = new JSONArray();
         for (Order order : orders) {
-            jsonArray.put(OrderService.convertOrderToJson(order));
+            JSONObject jsonObject1 = new JSONObject();
+            jsonObject1.put("id", order.getId());
+            jsonObject1.put("status", order.getStatus());
+            jsonObject1.put("buyerName", order.getBuyer().getFull_name());
+            jsonObject1.put("vendorName", order.getRestaurant().getName());
+            jsonObject1.put("created_at", order.getCreatedAt().toString());
+            jsonObject1.put("updated_at", order.getUpdatedAt().toString());
+            jsonArray.put(jsonObject1);
         }
         sendResponse(exchange, 200, jsonArray.toString());
     }
 
-    private void AdminSearchTransaction(HttpExchange exchange, String body) throws IOException {
-        Headers headers = exchange.getRequestHeaders();
-        String authHeader = headers.getFirst("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new UnauthorizedException("Unauthorized");
-        }
-
-        String token = authHeader.substring(7);
+    private void AdminSearchTransaction(HttpExchange exchange, String token) throws IOException {
         String phone = JwtUtil.validateToken(token);
         if (phone == null) {
             throw new UnauthorizedException("Unauthorized");
         }
+        System.out.println(121221);;
 
         var user = UserDao.getByPhone(phone);
         if (!(user instanceof Admin)) {
             throw new ForbiddenException("Forbidden");
         }
+        System.out.println(1564651);;
+        String requestBody = new String(exchange.getRequestBody().readAllBytes(), "UTF-8");
 
-        JSONObject jsonObject = new JSONObject(body);
+        JSONObject jsonObject = new JSONObject(requestBody);
         String Search = jsonObject.optString("search", null);
         String User = jsonObject.optString("user", null);
         String Method = jsonObject.optString("method", null);
-
-
         String Status = jsonObject.optString("status", null);
+        System.out.println(Search);
+        System.out.println(User);
+        System.out.println(Method);
+        System.out.println(Status);
         Set<PaymentTransaction> TransActions = PaymentTransactionDao.GetTransactionSet(Search, User, Method, Status);
         JSONArray jsonArray = new JSONArray();
         for (PaymentTransaction transaction : TransActions) {
             JSONObject transactionJson = new JSONObject();
             transactionJson.put("id", transaction.getId());
-            transactionJson.put("order_id", transaction.getOrder().getId());
+            transactionJson.put("order_id", transaction.getOrder() == null ? -1 : transaction.getOrder().getId());
             transactionJson.put("user_id", transaction.getBuyer().getId());
             transactionJson.put("method", transaction.getMethod());
             transactionJson.put("status", transaction.getStatus());
+            transactionJson.put("amount", transaction.getAmount());
+            transactionJson.put("date_time",transaction.getPaymentDate().toString());
             jsonArray.put(transactionJson);
         }
         sendResponse(exchange, 200, jsonArray.toString());

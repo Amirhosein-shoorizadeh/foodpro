@@ -61,7 +61,7 @@ public class OrderService {
             ratingObj.put("logobase64", new JSONArray(cleanLogoList));
             ratingObj.put("userName", rating.getUserName());
 
-            obj.put("rate", ratingObj); // ✅ درست شد
+            obj.put("rate", ratingObj);
         }else {
             obj.put("rate", JSONObject.NULL);
         }

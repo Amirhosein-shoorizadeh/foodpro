@@ -71,7 +71,7 @@ public class RestaurantDao {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             return session.createQuery("FROM Restaurant", Restaurant.class).list();
         } catch (HibernateException e) {
-            throw new RuntimeException("خطا در دریافت لیست رستوران‌ها", e);
+            throw new RuntimeException("Error", e);
         }
     }
 

@@ -88,9 +88,9 @@ public class RatingDao {
     public static boolean canEditId(User user, long id) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             Rating rating = session.get(Rating.class, id);
-            if (rating == null) {return false;} // اگر آیتم پیدا نشد
+            if (rating == null) {return false;}
 
-            return rating.getBuyer().getId() == user.getId(); // مقایسه شناسه‌ها
+            return rating.getBuyer().getId() == user.getId();
         }
     }
 

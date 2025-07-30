@@ -29,7 +29,7 @@ public class VendorHandler implements HttpHandler {
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 throw new UnauthorizedException("Unauthorized");
             }
-            String token = authHeader.substring(7); // حذف "Bearer "
+            String token = authHeader.substring(7);
             if ("POST".equalsIgnoreCase(method)) {
                 if(path.equals("/vendors")) {
                     ListVendorsWithFilters(exchange,body,token);

@@ -65,26 +65,25 @@ public class CouponDao {
             try {
                 session.beginTransaction();
 
-                // اول کوپن را لود کن
+
                 Coupon coupon = session.get(Coupon.class, id);
                 if (coupon == null) {
                     session.getTransaction().rollback();
                     return false;
                 }
 
-                // همه Orderهایی که از این کوپن استفاده می‌کنن پیدا کن
+
                 String hql = "FROM Order o WHERE o.coupon.id = :couponId";
                 List<Order> ordersUsingCoupon = session.createQuery(hql, Order.class)
                         .setParameter("couponId", id)
                         .getResultList();
 
-                // قطع ارتباط
                 for (Order order : ordersUsingCoupon) {
                     order.setCoupon(null);
                     session.merge(order); // یا session.update(order);
                 }
 
-                // حالا کوپن رو حذف کن
+
                 session.remove(coupon);
 
                 session.getTransaction().commit();

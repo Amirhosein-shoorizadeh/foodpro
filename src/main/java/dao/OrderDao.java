@@ -196,7 +196,7 @@ public class OrderDao {
     }
 
 
-    public static Set<Order> AdminSearchOrders(String restaurantKeyword, OrderStatus status,
+    public static Set<Order> AdminSearchOrders(String restaurantKeyword, String status,
                                                String foodKeyword, String buyerKeyword, String courierKeyword) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
@@ -207,9 +207,12 @@ public class OrderDao {
             LEFT JOIN FETCH o.courier c
             LEFT JOIN FETCH o.orderItems oi
             LEFT JOIN FETCH oi.food f
-            WHERE o.status = :status
+            WHERE 1=1
         """);
 
+            if (status != null) {
+                jpql.append(" AND o.status = :status ");
+            }
             if (restaurantKeyword != null && !restaurantKeyword.isBlank()) {
                 jpql.append(" AND REPLACE(LOWER(r.name), ' ', '') LIKE :restaurantKw ");
             }
@@ -223,9 +226,12 @@ public class OrderDao {
                 jpql.append(" AND REPLACE(LOWER(c.full_name), ' ', '') LIKE :courierKw ");
             }
 
-            Query<Order> query = session.createQuery(jpql.toString(), Order.class)
-                    .setParameter("status", status);
+            Query<Order> query = session.createQuery(jpql.toString(), Order.class);
 
+            if (status != null) {
+                OrderStatus orderStatus = OrderStatus.valueOf(status);
+                query.setParameter("status", orderStatus);
+            }
             if (restaurantKeyword != null && !restaurantKeyword.isBlank()) {
                 query.setParameter("restaurantKw", "%" + restaurantKeyword.toLowerCase().replace(" ", "") + "%");
             }
@@ -243,6 +249,7 @@ public class OrderDao {
             return new HashSet<>(resultList);
         }
     }
+
 
 
     public static Set<Order> BuyerSearch(String restaurantKeyword, String foodKeyword, long buyerId) {

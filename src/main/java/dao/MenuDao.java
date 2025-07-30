@@ -29,7 +29,7 @@ public class MenuDao {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             Transaction tx = session.beginTransaction();
             try {
-                // گرفتن منو در session جاری
+
                 Menu menu = session.createQuery("""
                 FROM Menu m
                 JOIN FETCH m.restaurant r
@@ -42,18 +42,18 @@ public class MenuDao {
 
                 if (menu == null) throw new NotFoundException("Menu not found");
 
-                // حذف رابطه ManyToMany بین غذاها و منو
+
                 for (Food food : new HashSet<>(menu.getFoods())) {
                     food.getMenus().remove(menu);
                     session.update(food);
                 }
                 menu.getFoods().clear();
 
-                // حذف منو از لیست رستوران
+
                 menu.getRestaurant().getMenus().remove(menu);
                 session.update(menu.getRestaurant());
 
-                // حذف منو
+
                 session.delete(menu);
 
                 tx.commit();
