@@ -3,6 +3,8 @@ package HttpHandeler;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import dao.RestaurantDao;
+import dao.UserDao;
 import dto.FoodDto;
 import dto.RestaurantDto;
 import entity.*;
@@ -54,6 +56,8 @@ public class RestaurantHandler implements HttpHandler {
                     String menuTitle = URLDecoder.decode(title, StandardCharsets.UTF_8);
 
                     GetFoodsForMenu(exchange,restaurantId,menuTitle,token);
+                }else if(path.equals("/restaurants/best")) {
+                    GetBestRestaurants(exchange,token);
                 }
             }
             else if (method.equals("POST")) {
@@ -353,6 +357,31 @@ public class RestaurantHandler implements HttpHandler {
             array.put(jsonObject);
         }
         sendResponse(exchange,200,array.toString());
+     }
+
+     private void GetBestRestaurants(HttpExchange exchange,String token) throws IOException {
+        String phone = JwtUtil.validateToken(token);
+        User user = UserDao.getByPhone(phone);
+        if(user == null){
+            throw new  NotFoundException("no user found");
+        }
+        if(!(user instanceof Buyer)){
+            throw new ForbiddenException("forbidden");
+        }
+        List<Restaurant> restaurants = RestaurantDao.getBestRestaurant();
+         JSONArray response = new JSONArray();
+         for (Restaurant restaurant : restaurants) {
+             JSONObject jsonObject = new JSONObject();
+             jsonObject.put("id", restaurant.getId());
+             jsonObject.put("name", restaurant.getName());
+             jsonObject.put("address", restaurant.getAddress());
+             jsonObject.put("phone", restaurant.getPhone());
+             jsonObject.put("logoBase64",restaurant.getLogobase64());
+             jsonObject.put("tax_fee",restaurant.getTax_fee());
+             jsonObject.put("additional_fee",restaurant.getAdditional_fee());
+             response.put(jsonObject);
+         }
+         sendResponse(exchange,200,response.toString());
      }
 
 

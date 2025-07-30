@@ -62,10 +62,12 @@ public class PaymentTransactionDao {
                 query.setParameter("buyerKw", "%" + buyerKeyword.toLowerCase().replace(" ", "") + "%");
             }
             if (methodKeyword != null && !methodKeyword.isBlank()) {
-                query.setParameter("methodKw", methodKeyword.toLowerCase());
+                TransactionMethod method = TransactionMethod.valueOf(methodKeyword.toLowerCase());
+                query.setParameter("methodKw", method);
             }
             if (statusKeyword != null && !statusKeyword.isBlank()) {
-                query.setParameter("statusKw", statusKeyword.toLowerCase());
+                TransactionStatus status = TransactionStatus.valueOf(statusKeyword.toUpperCase());
+                query.setParameter("statusKw", status);
             }
 
             return new HashSet<>(query.getResultList());

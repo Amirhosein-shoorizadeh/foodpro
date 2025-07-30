@@ -49,15 +49,11 @@ public class adminHandler implements HttpHandler {
                 if (exchange.getRequestMethod().equals("GET")) {
                     if (path.equals("/admin/users")) {
                         handle_UserListNotApproved(exchange, token);
-                    } else if (path.equals("/admin/orders")) {
-                        AdminSearchOrder(exchange, token);
                     } else if (path.equals("/admin/coupons")) {
                         handle_CouponList(exchange, token);
                     } else if (path.equals("/admin/coupons/\\d+")) {
                         handle_getcoupons(exchange);
-                    } else if (path.equals("/admin/transactions")) {
-                        AdminSearchTransaction(exchange, token);
-                    } else if (path.equals("/admin/allusers")){
+                    }  else if (path.equals("/admin/allusers")){
                         Handle_UserApproved(exchange, token);
                     }else {
                         throw new NotFoundException("Not Found Path");
@@ -67,6 +63,10 @@ public class adminHandler implements HttpHandler {
                         handle_CreateCoupon(exchange, token);
                     }else if (path.matches("/admin/users/\\d+/status") && path.split("/").length == 5) {
                         handle_UserApproval(exchange, token);
+                    }else if (path.equals("/admin/transactions")) {
+                        AdminSearchTransaction(exchange, token);
+                    } else if (path.equals("/admin/orders")) {
+                        AdminSearchOrder(exchange, token);
                     }else {
                         sendResponse(exchange, 401, "Unauthorized");
                     }
@@ -109,7 +109,7 @@ public class adminHandler implements HttpHandler {
 
         var users = UserDao.getAllNotApprovedExceptAdmins();
         var dtoList = users.stream().map(u -> new UserProfileDto(u.getId(), u.getFull_name(), u.getPhone(), u.getEmail(), u.getClass().getSimpleName(), // role
-                u.getAddress(), u.getProfileImageBase64(), u.getBankinfo() != null ? new Bankinfo(u.getBankinfo().getBank_name(), u.getBankinfo().getAccount_number()) : null)).toList();
+                u.getAddress(), u.getProfileImageBase64(), u.getBankinfo() != null ? new Bankinfo(u.getBankinfo().getBank_name(), u.getBankinfo().getAccount_number(),u.getBankinfo().getWalletBalance()) : null)).toList();
 
         String json = gson.toJson(dtoList);
         sendResponse(exchange, 200, json);
@@ -124,7 +124,7 @@ public class adminHandler implements HttpHandler {
         }
         var users = UserDao.getAllApprovedExceptAdmins();
         var dtoList = users.stream().map(u -> new UserProfileDto(u.getId(), u.getFull_name(), u.getPhone(), u.getEmail(), u.getClass().getSimpleName(), // role
-                u.getAddress(), u.getProfileImageBase64(), u.getBankinfo() != null ? new Bankinfo(u.getBankinfo().getBank_name(), u.getBankinfo().getAccount_number()) : null)).toList();
+                u.getAddress(), u.getProfileImageBase64(), u.getBankinfo() != null ? new Bankinfo(u.getBankinfo().getBank_name(), u.getBankinfo().getAccount_number(),u.getBankinfo().getWalletBalance()) : null)).toList();
 
         String json = gson.toJson(dtoList);
         sendResponse(exchange, 200, json);

@@ -9,9 +9,10 @@ public class Bankinfo {
     private double walletBalance;
 
     public Bankinfo(){}
-    public Bankinfo(String bank_name, String account_number) {
+    public Bankinfo(String bank_name, String account_number, double walletBalance) {
         this.bank_name = bank_name;
         this.account_number = account_number;
+        this.walletBalance = walletBalance;
     }
 
     public String getBank_name() {

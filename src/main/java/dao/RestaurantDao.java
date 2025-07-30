@@ -110,5 +110,24 @@ public class RestaurantDao {
         }
     }
 
+    public static List<Restaurant> getBestRestaurant() {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            String hql = """
+            SELECT o.restaurant
+            FROM Order o
+            GROUP BY o.restaurant
+            ORDER BY COUNT(o.id) DESC
+        """;
+
+            return session.createQuery(hql, Restaurant.class)
+                    .setMaxResults(10)
+                    .getResultList();
+        } catch (HibernateException e) {
+            throw new RuntimeException("خطا در دریافت رستوران‌های پرفروش", e);
+        }
+    }
+
+
+
 
 }
